@@ -14,20 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * @file SSAL.h
- * @brief A fast implementation of standard Stochastic Simulation algorithms.
- * @details This library provides optimised sequential and parallel exact and 
- * approximate stochastic simulation algorithms. The implementations provide an
- * easy to use application program interface (API) using standard C structures.
- *
- * @author David J. Warne (david.warne@qut.edu.au)
- * @author School of Mathematical Sciences
- * @author Science and Engineering Faculty
- * @author Queensland University of Technology
- *
- * @date 3 Sep 2015
- */
 
 #ifndef __SSAL_H_
 #define __SSAL_H_
@@ -53,6 +39,14 @@
 
 #define SSAL_MAX_NAME_SIZE      128
 
+#define SSAL_REGISTER_ALG(alg,icf,ef,cpf,ovf) \
+                        SSAL_registerInputCheckFunc((alg),(icf));\
+                        SSAL_registerExecuteFunc((alg),(ef));\
+                        SSAL_registerCheckpointFunc((alg),(cpf));\
+                        SSAL_registerOutputValidationFunc((alg),(ovf));\
+#define SSAL_DISABLE_ALG(alg) (SSAL_ALG_ENABLED[(alg)] = 0)  
+#define SSAL_ENABLE_ALG(alg) (SSAL_ALG_ENABLED[(alg)] = 1)  
+
 /**@struct SSAL_Options_struct
  * @brief Contains user runtime configurable options
  */
@@ -68,18 +62,17 @@ typedef struct SSAL_Options_struct SSAL_Options;
  * @brief Enumeration of the available Exact and Approximate algorithms
  */
 enum SSAL_AlgorithmType_enum {
-#ifdef __SERIAL__
     SSAL_ESSA_GILLESPIE_SEQUENTIAL,
     SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
     SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
     SSAL_ASSA_TIME_DISCRETISE_SEQUENTIAL,
     SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL,
-#endif
-#ifdef __PARALLEL__
-#endif
     SSAL_ESSA_AUTO,
     SSAL_ASSA_AUTO,
+    SSAL_RESTORE,
     SSAL_INFO,
+    SSAL_USER_ALG,
+    SSAL_NUM_ALGS
 };
 /** type name for  SSAL_Algorithm_enum*/
 typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
@@ -144,14 +137,6 @@ struct SSAL_Simulation_struct{
 /** type name for  SSAL_Simulation_struct*/
 typedef struct SSAL_Simulation_struct SSAL_Simulation;
 
-struct SSAL_Algorithm_struct {
-    int (*inputCheck_func)(SSAL_Simulation *); 
-    int (*execute_func)(SSAL_Simulation *);
-    int (*writeResults_func)(SSAL_Simulation *,FILE *);
-    int (*outputCheck_func)(Simulation *);    
-};
-typedef struct SSAL_Algorithm_struct SSAL_Algorithm;
-
 /**
  * realisation simulation
  */
@@ -177,6 +162,44 @@ struct SSAL_RealisationSimulation_struct {
 typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
 
+struct SSAL_Algorithm_struct {
+    int (*inputCheck_func)(SSAL_Simulation *); 
+    int (*execute_func)(SSAL_Simulation *,int, char **,int (*)(FILE *,void *),unsigned char,void *);
+    int (*checkpoint_func)(FILE *,void *);
+    int (*outputValidation_func)(Simulation *);    
+};
+typedef struct SSAL_Algorithm_struct SSAL_Algorithm;
+
+#define SSAL_INPUTCHECK(alg,s) (*(SSAL_ALG_LUT[(alg)].inputCheck_func))((s))
+#define SSAL_EXEC(alg,s,a,v) (*(SSAL_ALG_LUT[(alg)].execcute_func))((s),(a),(v),NULL,0,NULL)
+
+/**
+ * @brief Register a Algorithm Input Check Callback
+ * @param alg the algorithm type
+ * @param f input check function
+ */
+int SSAL_registerInputCheckFunc(SSAL_AlgorithmType,int (*)(SSAL_Simulation *));
+/**
+ * @brief Register a Algorithm Execute Callback
+ * @param alg the algorithm type
+ * @param f execution function
+ */
+int SSAL_registerExecuteFunc(SSAL_AlgorithmType,int, char **,
+                        int (*)(SSAL_Simulation *,int (*)(FILE *,void *),unsigned char, void *));
+/**
+ * @brief Register a Algorithm Check Point Callback
+ * @param alg the algorithm type
+ * @param f check point function
+ */
+int SSAL_registerCheckPointFunc(SSAL_AlgorithmType,int (*)(FILE *,void *));
+/**
+ * @brief Register a Algorithm Output Validation Callback
+ * @param alg the algorithm type
+ * @param f output validation function
+ */
+int SSAL_registerOutputValidationFunc(SSAL_AlgorithmType,int (*)(FILE *,void *));
+
+
 /* function prototypes*/
 
 int SSAL_Inititalise(int,char **); 
@@ -188,5 +211,6 @@ int SSAL_Simulate(SSAL_Simulation, SSAL_AlgorithmType, const char *);
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
 void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
+
 
 #endif

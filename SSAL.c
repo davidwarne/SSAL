@@ -30,9 +30,11 @@
  */
 
 #include "SSAL.h"
+#include "SSAL_default_callbacks.h"
 
 SSAL_Options SSAL_GLOBAL_Options;
-
+SSAL_Algorithm SSAL_ALG_LUT[SSAL_NUM_ALGS];
+unsigned char SSAL_ALG_ENABLED[SSAL_NUM_ALGS];
 /**
  * @brief Handle error reporting
  * @param errCode The Error code 
@@ -130,8 +132,16 @@ int SSAL_Inititalise(int argc,char **argv)
             SSAL_HandleError(SSAL_UNKNOWN_OPTION,"SSAL_Initialise",__LINE__,0,1,argv[i]);
         }
     }
-
     /*register algorithms*/
+    /*set all callback to NULL*/
+    for (i=0;i<SSAL_NUM_ALGS;i++)
+    {
+        SSAL_REGISTER_ALG(i,NULL,NULL,NULL,NULL)
+    }
+    /*register callbacks*/
+    SSAL_REGISTER_ALG(SSAL_ESSA_GILLESPIE_SEQUENTIAL,&checkANYCRNSEQ,&exec_essa_gil_seq,NULL,NULL)
+    #ifdef __PARALLEL__
+    #endif
 }
 
 /**
@@ -356,55 +366,11 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
  */
 int SSAL_Simulate(SSAL_Simulation *sim, SSAL_Algorithm alg, const char * args)
 {
-    /* All case follow the same process
-     *  1. Check inputs and function validity
-     *  2. pre-process model for specific algorithm
-     *  3. call specific subroutine 
-     *  4. pack results into realisation Set
-     */
 
-    switch (alg)
+    if (alg < SSAL_NUM_ALGS && alg >= 0)
     {
-        case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
-            /*check model is valid*/
-            if (sim.model->type != SSAL_CHEMICAL_REACTION_NETWORK)
-            {
-                SSAL_HandleError(SSAL_INVALID_OPTION,"SSAL_SimulateReactionNetwork",__LINE__,1,0,
-                    "Gillespie requires a chemical reaction network model.");
-            }
-            /*check options allow execution*/
-            if (!(SSAL_GLOBAL_Options.algOptions & SSAL_ALG_SEQUENTIAL))
-            {
-                SSAL_HandleError(SSAL_INVALID_OPTION,"SSAL_SimulateReactionNetwork",__LINE__,1,0,
-                    "User Specified runtime argument forbids execution.");
-            }
-
-        {
-            /*variable declarations*/
-            int nt;
-            int m;
-            int n;
-            float nu[model.M*model.N];
-            float nu_minus[model.M*model.N];
-            float X0[model.N];
-            float c[model.M];
-            float T[numObs];
-            
-            /*outputs*/
-                        
-            
-        }
-            break;
-        #ifdef __PARALLEL__ 
-        #endif
-        case SSAL_ASSA_AUTO:
-            break;
-        case SSAL_ESSA_AUTO:
-            break;
-        case SSAL_INFO: 
-        default:
-            /*call compile info command*/
-            break;
+        SSAL_INPUTCHECK(alg,sim);            
+        SSAL_EXEC(alg,sim,nparams,params);            
     }
 }
 
