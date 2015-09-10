@@ -33,84 +33,160 @@
 #define __SSAL_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "SSAL_internal.h"
+/*error codes*/
+#define SSAL_SUCCESS            0
+#define SSAL_INVALID_OPTION     -1
+#define SSAL_UNKNOWN_OPTION     -2
+#define SSAL_IO_ERROR           -3
+#define SSAL_UNKNOWN_TYPE       -4
+
+/*option codes*/
+#define SSAL_ALG_SEQUENTIAL     0x01
+#define SSAL_ALG_PARALLEL       0x02
+#define SSAL_ALG_DISTRUBUTED    0x04
+#define SSAL_ALG_ACCEL          0x08
+#define SSAL_ALG_DEFAULT        0x0F
+
+#define SSAL_MAX_NAME_SIZE      128
+
+/**@struct SSAL_Options_struct
+ * @brief Contains user runtime configurable options
+ */
+struct SSAL_Options_struct {
+    /**bitmask of algorithm types that are available for selection*/
+    uint8_t algOptions; 
+};
+
+typedef struct SSAL_Options_struct SSAL_Options;
+
+/**
+ * @enum SSAL_AlgorithmType_enum
+ * @brief Enumeration of the available Exact and Approximate algorithms
+ */
+enum SSAL_AlgorithmType_enum {
+#ifdef __SERIAL__
+    SSAL_ESSA_GILLESPIE_SEQUENTIAL,
+    SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
+    SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
+    SSAL_ASSA_TIME_DISCRETISE_SEQUENTIAL,
+    SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL,
+#endif
+#ifdef __PARALLEL__
+#endif
+    SSAL_ESSA_AUTO,
+    SSAL_ASSA_AUTO,
+    SSAL_INFO,
+};
+/** type name for  SSAL_Algorithm_enum*/
+typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
+
+enum ModelType_enum {
+    SSAL_CHEMICAL_REACTION_NETWORK
+};
+/** type name for  SSAL_ModelType_enum*/
+typedef enum SSAL_ModelType_enum SSAL_ModelType;
+
+enum SimulationType_enum {
+    SSAL_REALISATIONS,
+    SSAL_EXPECTEDVALUE
+};
+/** type name for  SSAL_SimulationType_enum*/
+typedef enum SSAL_SimulationType_enum SSAL_SimulationType;
+
+/**
+ * generic stochastic model 
+ */
+struct SSAL_Model_struct {
+    SSAL_ModelType type;
+    void *model;
+}
+
+/**
+ * @struct SSAL_ChemicalReactionNetwork_struct
+ * @brief Defines a stochastic Chemical Reaction network model
+ * @detail A user can manually interact with an instance of this structure
+ * or use the SSAL_Create_ChemicalReactionNetwork function
+ */
+struct SSAL_ChemicalReactionNetwork_struct {
+    /** Chemical Species Names*/
+    char ** names;
+    /** number of Chemical Species*/
+    uint32_t N;
+    /** number of reactions */
+    uint32_t M;
+    /** stochiometric coefficient matrix of the reactants */
+    float *nu_minus;
+    /** stochiometric coefficient matrix of the products */
+    float *nu_plus;
+    /** kinetic rate constants*/
+    float *c;
+};
+/** type name for  SSAL_ChemicalReactionNetwork_struct*/
+typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
+
+/**
+ * @struct SSAL_Simulation_struct
+ * @brief defines generic simulation 
+ */
+struct SSAL_Simulation_struct{
+    /**
+     * The type of simulation structure
+     */
+    SSAL_SimulationType type;
+    /** model to use in simulation */
+    SSAL_model *model;
+    void *sim;
+};
+/** type name for  SSAL_Simulation_struct*/
+typedef struct SSAL_Simulation_struct SSAL_Simulation;
+
+struct SSAL_Algorithm_struct {
+    int (*inputCheck_func)(SSAL_Simulation *); 
+    int (*execute_func)(SSAL_Simulation *);
+    int (*writeResults_func)(SSAL_Simulation *,FILE *);
+    int (*outputCheck_func)(Simulation *);    
+};
+typedef struct SSAL_Algorithm_struct SSAL_Algorithm;
+
+/**
+ * realisation simulation
+ */
+struct SSAL_RealisationSimulation_struct {
+    /**numbr of observation times */
+    int NT;
+    /** observation times */
+    float *T;
+    /** number of realisations*/
+    int NR;
+    /**number of initial conditions */
+    int NIC;
+    /** initial conditions */
+    float *IC;
+    /** number od vvariables to observe */
+    int Nvar;
+    /** model variables to observe by name */
+    char **var;
+    /** output data*/
+    float *output;
+};
+/** type name for  SSAL_RealisationSimulation_struct*/
+typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
 
 /* function prototypes*/
 
-/**
- * @brief Initilialises the SSAL library
- * @detail Initialised the computational backend based on compilation
- * options applied. Some user customisations are also available.
- *
- * @param argc the number of input args
- * @param argv an array of args
- *
- * @retVal SSAL_SUCCESS if initialisation was successful
- */
 int SSAL_Inititalise(int,char **); 
-
-/**
- * @brief Safely creates a chemical reaction network
- * @detail checks inputs are valid and creates the network
- *
- * @param N the number of chemical species
- * @param M the number of chemical reactions
- * @param nu_minus the reactant stochiometric coefficient matrix
- * @param nu_plus the product stochiometric coefficient matrix
- * @param c kinetic rate contstants
- *
- * @returns A Chemical Reaction Network Structure
- *
- * @note nu_minus and nu_minus must be N*M length vectors representing 
- * an M by N matrix using row-major storage. nu[j][i] is the quantity of chemical
- * species i required for reaction j.
- *
- * @note c must an M length vector, where c[j] is the kinetic rate of reaction j.
- *
- * @note Internally this function creates new copies of the stochiometric 
- * coefficient matrices. This ensures that the resulting allocated memory is valid, 
- * however it does not prevent invalid data in the matrices if the input pointers 
- * are not valid.
- */
-SSAL_ChemicalReactionNetwork SSAL_CreateChemicalReactionNetwork(char ** names, int ,int, 
-                                                        restrict float *, restrict  float *, float);
-/**
- * @brief Performs N realisations of the a reaction network using the selected algorithm
- *
- * @param N Number of realisations to generate
- * @param model A chemical reaction network structure
- * @param X0 Initial chemical species copy numbers
- * @param T  A vector of time points to observe each realisation at
- * @param NT the number of time points 
- * @param alg the selected algorithm 
- * @param args algorithm specific parameters
- * 
- * @returns an array of realisations
- */
-SSAL_RealisationSet SSAL_SimulateReactionNetwork(int, SSAL_ChemicalReactionNetwork, float *, float*, 
-                                            int, SSAL_Algorithm, const char *);
-
-/**
- * @briefs Estimates the expected values of copy numbers at give time points
- * 
- * @params model A chemical reaction network structure
- * @param X0 Initial chemical copy numbers
- * @param T  A vector of time points to observe each realisation at
- * @param NT the number of time points 
- * @param alg the selected algorithm 
- * @param args algorithm specific parameters
- */
-SSAL_RealisationSet SSAL_ComputeExpectedValue(SSAL_ChemicalReactionNetwork, float *,float *, int,
-                                        SSAL_Algorithm, const char *);
-
-/**
- * @brief write simulation results to file
- * @param stream the output stream
- * @param data a Realisation set
- */
-int SSAL_WriteRealisationSet(FILE *,SSAL_RealisationSet);
-
+SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
+                            float * restrict nu_minus, float * restrict nu_plus, float * restrict c)
+SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
+                                float*, float * );
+int SSAL_Simulate(SSAL_Simulation, SSAL_AlgorithmType, const char *);
+int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
+int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
+void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
 
 #endif

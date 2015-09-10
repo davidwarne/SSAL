@@ -33,96 +33,14 @@
 #ifndef __SSAL_INTERNAL_H_
 #define __SSAL_INTERNAL_H_
 
+#ifdef __SERIAL__
 #include "ESSA_sequential.h"
 #include "ASSA_sequential.h"
+#endif
 
-#ifndef __PARALLEL__
+#ifdef __PARALLEL__
 #include "ESSA_parallel.h"
 #include "ASSA_parallal.h"
 #endif
-
-/* Data structures and typedefs */
-
-/**
- * @struct SSAL_ChemicalReactionNetwork_struct
- * @brief Defines a stochastic Chemical Reaction network model
- * @detail A user can manually interact with an instance of this structure
- * or use the SSAL_Create_ChemicalReactionNetwork function
- */
-struct SSAL_ChemicalReactionNetwork_struct {
-    /** Chemical Species Names*/
-    char ** names;
-    /** number of Chemical Species*/
-    uint32_t N;
-    /** number of reactions */
-    uint32_t M;
-    /** stochiometric coefficient matrix of the reactants */
-    float *nu_minus;
-    /** stochiometric coefficient matrix of the products */
-    float *nu_plus;
-    /** kinetic rate constants*/
-    float *c;
-};
-
-/**
- * @struct SSAL_RealisationSet_struct
- * @brief defines a storage struct for simulation data
- * @detail stores multiple realisations of a model at specific 
- * points in time. This struction is also used to store expected
- * value data along with uncertainties. 
- */
-struct SSAL_RealisationSet_struct{
-    /** Chemical Species Names*/
-    char ** names;
-    /** number of Chemical Species*/
-    uint32_t N;
-    /** number of realisations*/
-    uint32_t NR;
-    /** number of time points*/
-    uint32_t NT;
-    /** time points*/
-    float *T;
-    /** The An NR*NT*N array containing copy numbers
-     * @detail Represents a NR x NT x N matrix where
-     * X_r[k][j][i] is the copy number of the i-th species 
-     * at the j-th time step in the k-th realiseation. Matrix is row-major
-     */
-    float *X_r;
-    /** The An NR*NT*N array containing confidence intervals
-     * @detail Represents a NR x NT x N matrix where
-     * X_r[k][j][i] is the confidence intervals of the i-th species 
-     * at the j-th time step in the k-th realiseation. Matrix is row-major.
-     * @note this is only utilised when each realisation is an expectation
-     */
-    float *X_conf;
-
-}
-
-/**
- * @enum SSAL_Algorithm_enum
- * @brief Enumeration of the available Exact and Approximate algorithms
- */
-enum SSAL_Algorithm_enum {
-
-    SSAL_ESSA_GILLESPIE_SEQUENTIAL,
-    SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
-    SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
-    SSAL_ASSA_TIME_DISCRETISE_SEQUENTIAL,
-    SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL,
-#ifdef __PARALLEL__
-#endif
-    SSAL_NUM_ALG
-};
-
-/** type name for  SSAL_ChemicalReactionNetwork_struct*/
-typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
-
-/** type name for  SSAL_RealisationSet_struct*/
-typedef struct SSAL_RealisationSet_struct SSAL_RealisationSet;
-
-/** type name for  SSAL_Algorithm_enum*/
-typedef enum SSAL_Algorithm_enum SSAL_Algorithm_t;
-
-/** put function registration stuff in here */
 
 #endif
