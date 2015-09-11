@@ -26,15 +26,11 @@
  * @author Science and Engineering Faculty
  * @author Queensland University of Technology
  *
- * @date 10 Sep 2015
+ * @date 11 Sep 2015
  */
 
 #include "SSAL.h"
-#include "SSAL_default_callbacks.h"
 
-SSAL_Options SSAL_GLOBAL_Options;
-SSAL_Algorithm SSAL_ALG_LUT[SSAL_NUM_ALGS];
-unsigned char SSAL_ALG_ENABLED[SSAL_NUM_ALGS];
 /**
  * @brief Handle error reporting
  * @param errCode The Error code 
@@ -118,30 +114,20 @@ int SSAL_Inititalise(int argc,char **argv)
     }
 
     /*set defaults*/
-    SSAL_GLOBAL_Options.algOptions = SSAL_ALG_DEFAULT;
+    SSAL_GLOBAL_Options.parallel_enabled = 1;
     
     /*parse args*/
     for (;i<argc;i++)
     {
-        if (!strcmp("--sequential-Only",argv[i]))
+        if (!strcmp("--no-parallel",argv[i]))
         {
-            SSAL_GLOBAL_Options.algOptions = SSAL_ALG_SEQUENTIAL;
+            SSAL_GLOBAL_Options.parallel_enabled = 0;
         }
         else
         {
             SSAL_HandleError(SSAL_UNKNOWN_OPTION,"SSAL_Initialise",__LINE__,0,1,argv[i]);
         }
     }
-    /*register algorithms*/
-    /*set all callback to NULL*/
-    for (i=0;i<SSAL_NUM_ALGS;i++)
-    {
-        SSAL_REGISTER_ALG(i,NULL,NULL,NULL,NULL)
-    }
-    /*register callbacks*/
-    SSAL_REGISTER_ALG(SSAL_ESSA_GILLESPIE_SEQUENTIAL,&checkANYCRNSEQ,&exec_essa_gil_seq,NULL,NULL)
-    #ifdef __PARALLEL__
-    #endif
 }
 
 /**
@@ -364,15 +350,156 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
  * 
  * @return return code
  */
-int SSAL_Simulate(SSAL_Simulation *sim, SSAL_Algorithm alg, const char * args)
+int SSAL_Simulate(SSAL_Simulation *sim, SSAL_AlgorithmType alg, const char * args)
 {
-
-    if (alg < SSAL_NUM_ALGS && alg >= 0)
-    {
-        SSAL_INPUTCHECK(alg,sim);            
-        SSAL_EXEC(alg,sim,nparams,params);            
+    int rc;
+    switch(sim->type)
+    {   
+        case SSAL_REALISATIONS:
+            rc = SSAL_SimulationRealisations(sim->sim,alg,args);
+            break;
+        case SSAL_EXPECTEDVALUE:
+            break;
+        default:
+            
+            break;
     }
 }
 
+/**
+ * @brief Run a realisation simulation
+ * @param sim a Realisation simulation structure
+ * @param alg the selected algorithm type
+ * @param args algorithm specific args
+ */
+int SSAL_SimulateRealisations(SSAL_RealisationSimulation *sim, SSAL_AlgorithmType alg, 
+                        const char *args)
+{
+    int argc;
+    char **argv
+    argv = SSAL_UtilTokeniseArgs(&argc,args);
+    switch (sim->model->type)
+    {
+        case SSAL_CHEMICAL_REACTION_NETWORK:
+            SSAL_SimulateCRNRealisations(sim,model->model,alg,argc,argv);
+            break;
+        default:
+            break;
+    }
+    /*the first pointer is a pointer to the whole array*/
+    free(argv[0]);
+}
 
+/**
+ * @brief run a realisation simulation on a Chemical Reaction Network model
+ * @param sim a Realisation Simulation structure
+ * @param model a Chemical Reaction network model
+ * @param alg the selected algorithm type
+ * @param argc the number of args
+ * @param argv input ags
+ */
+int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim, 
+            SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
+{
+    int j,i;
+    int nvar;
+    int var[sim->Nvar];
+    float nu[model->N*model->M];
+
+    /*algorithm selector*/ 
+    switch(alg)
+    {
+        case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
+        {
+            for (i=0;i<n*m;i++)
+            {
+                nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
+            }
+            X_rj = (float *)malloc(N*nt*n*sizeof(float));
+            for (j=0;j<N;j++)
+            {
+                segils(model->M,model->N,nt,T,X0,nu_minus,nu,c,vars,X_rj+j*(nt*n));
+            }
+        }
+            break;
+        case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
+            break;
+        default:
+            break;
+    }
+
+    sim->output = (void*) X_rj;
+}
  
+/**
+ * @brief utilitiy function which breaks a char array into a array of char arrays
+ * @param argc arg count
+ * @param args input arg string 
+ * @return argv a array of pointers to a char arrays
+ */
+char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
+{
+    char *buf;
+    char **argv;
+
+    int numChars;
+    int numArgs;
+    int argsLength;
+    int i,j,k;
+    char cur_char;
+    char prev_char;
+
+    cur_char = args[0];
+    prev_char = ' ';
+    numChars = 0;
+    numArgs = 0;
+    i = 0;
+
+    /*first pass to get sizes... a bit insecure as buffer overruns can occur*/
+    while (cur_char != '\0' && i != SSAL_MAX_BUFFER_SIZE)
+    {
+        numChars += (cur_char != ' ');
+        numArgs += (cur_char != ' ' && prev_char == ' ');
+        i++;
+        prev_char = cur_char;
+        cur_char = args[i];
+    }
+    
+    buf = (char *)malloc((numChar+numArgs)*sizeof(char));
+    argv = (char **)malloc(numArgs*sizeof(char*));
+    j = 0;
+    k = 0;
+    /*second pass to collect tokenised data*/
+    for (i=0;i<argsLength-1;i++)
+    {
+        /*starting a token*/
+        if (args[i] == ' ' && args[i+1] != ' ')
+        {
+            buf[j] = args[i+1];
+            argv[k] = buf + j;
+            k++;
+            j++;
+        } /*ending a token*/
+        else if ( args[i] != ' ')
+        {
+            buf[j] = args[i];
+            j++;
+        }
+        else if (i==0 && args[i] != ' ')
+        {
+            buf[j] = args[i];
+            argv[k] = buf + j;
+            j++;
+            k++;
+        }
+    }
+    /*append null characters*/
+    for (k=1;k<numArgs;k++;)
+    {
+        argv[k][-1] = '\0';
+    }
+    buf[numChar+numArgs - 1] = '\0';
+    *argc = numArgs;
+    return argv;
+}
+

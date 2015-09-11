@@ -31,21 +31,8 @@
 #define SSAL_UNKNOWN_TYPE       -4
 
 /*option codes*/
-#define SSAL_ALG_SEQUENTIAL     0x01
-#define SSAL_ALG_PARALLEL       0x02
-#define SSAL_ALG_DISTRUBUTED    0x04
-#define SSAL_ALG_ACCEL          0x08
-#define SSAL_ALG_DEFAULT        0x0F
-
 #define SSAL_MAX_NAME_SIZE      128
-
-#define SSAL_REGISTER_ALG(alg,icf,ef,cpf,ovf) \
-                        SSAL_registerInputCheckFunc((alg),(icf));\
-                        SSAL_registerExecuteFunc((alg),(ef));\
-                        SSAL_registerCheckpointFunc((alg),(cpf));\
-                        SSAL_registerOutputValidationFunc((alg),(ovf));\
-#define SSAL_DISABLE_ALG(alg) (SSAL_ALG_ENABLED[(alg)] = 0)  
-#define SSAL_ENABLE_ALG(alg) (SSAL_ALG_ENABLED[(alg)] = 1)  
+#define SSAL_MAX_BUFFER_SIZE    1024
 
 /**@struct SSAL_Options_struct
  * @brief Contains user runtime configurable options
@@ -70,9 +57,7 @@ enum SSAL_AlgorithmType_enum {
     SSAL_ESSA_AUTO,
     SSAL_ASSA_AUTO,
     SSAL_RESTORE,
-    SSAL_INFO,
-    SSAL_USER_ALG,
-    SSAL_NUM_ALGS
+    SSAL_INFO
 };
 /** type name for  SSAL_Algorithm_enum*/
 typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
@@ -162,49 +147,11 @@ struct SSAL_RealisationSimulation_struct {
 typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
 
-struct SSAL_Algorithm_struct {
-    int (*inputCheck_func)(SSAL_Simulation *); 
-    int (*execute_func)(SSAL_Simulation *,int, char **,int (*)(FILE *,void *),unsigned char,void *);
-    int (*checkpoint_func)(FILE *,void *);
-    int (*outputValidation_func)(Simulation *);    
-};
-typedef struct SSAL_Algorithm_struct SSAL_Algorithm;
-
-#define SSAL_INPUTCHECK(alg,s) (*(SSAL_ALG_LUT[(alg)].inputCheck_func))((s))
-#define SSAL_EXEC(alg,s,a,v) (*(SSAL_ALG_LUT[(alg)].execcute_func))((s),(a),(v),NULL,0,NULL)
-
-/**
- * @brief Register a Algorithm Input Check Callback
- * @param alg the algorithm type
- * @param f input check function
- */
-int SSAL_registerInputCheckFunc(SSAL_AlgorithmType,int (*)(SSAL_Simulation *));
-/**
- * @brief Register a Algorithm Execute Callback
- * @param alg the algorithm type
- * @param f execution function
- */
-int SSAL_registerExecuteFunc(SSAL_AlgorithmType,int, char **,
-                        int (*)(SSAL_Simulation *,int (*)(FILE *,void *),unsigned char, void *));
-/**
- * @brief Register a Algorithm Check Point Callback
- * @param alg the algorithm type
- * @param f check point function
- */
-int SSAL_registerCheckPointFunc(SSAL_AlgorithmType,int (*)(FILE *,void *));
-/**
- * @brief Register a Algorithm Output Validation Callback
- * @param alg the algorithm type
- * @param f output validation function
- */
-int SSAL_registerOutputValidationFunc(SSAL_AlgorithmType,int (*)(FILE *,void *));
-
-
 /* function prototypes*/
 
 int SSAL_Inititalise(int,char **); 
 SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
-                            float * restrict nu_minus, float * restrict nu_plus, float * restrict c)
+                            float * restrict , float * restrict , float * restrict );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 float*, float * );
 int SSAL_Simulate(SSAL_Simulation, SSAL_AlgorithmType, const char *);
@@ -212,5 +159,9 @@ int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
 void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
 
+int SSAL_SimulateRealisations(SSAL_RealisationSimulation *, SSAL_AlgorithmType, const char *);
+int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
+            SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
 
+char** SSAL_UtilTokeniseArgs(int *,const char *);
 #endif
