@@ -108,7 +108,6 @@ int SSAL_Initialise(int argc,char **argv)
         if (!strcmp("--SSALOPT",argv[i]))
         {
             i++;
-
             break;
         }
     }
@@ -157,25 +156,52 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
                             float * restrict nu_minus, float * restrict nu_plus, float * restrict c)
 {
     int i;
+    char * funcname;
     char * nameArray;
     SSAL_Model newModel;
     SSAL_ChemicalReactionNetwork *newCRN;
    
+   funcname = "SSAL_CreateChemicalReactionNetwork";
+   
+    /*build wrapper struct*/
     newModel.type = SSAL_CHEMICAL_REACTION_NETWORK;
-    newCRN = (SSAL_ChemicalReactionNetwork*)malloc(sizeof(SSAL_ChemicalReactionNetwork));
+    if ((newCRN = (SSAL_ChemicalReactionNetwork*)malloc(sizeof(SSAL_ChemicalReactionNetwork)))== NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+   
     newModel.model = (void *)newCRN;
+    
     /*allocate memory*/
     newCRN->N = (uint32_t)N;
     newCRN->M = (uint32_t)M;
-    nameArray = (char *)malloc(newCRN->N*SSAL_MAX_NAME_SIZE*sizeof(char));
-    newCRN->names = (char **)malloc(newCRN->N*sizeof(char*));
+    
+    if ((nameArray = (char *)malloc(newCRN->N*SSAL_MAX_NAME_SIZE*sizeof(char))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((newCRN->names = (char **)malloc(newCRN->N*sizeof(char*)))== NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    
     for (i=0;i<newCRN->N;i++)
     {
         newCRN->names[i] = nameArray + i*SSAL_MAX_NAME_SIZE;
     }
-    newCRN->nu_minus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float));
-    newCRN->nu_plus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float));
-    newCRN->c = (float *)malloc(newCRN->M*sizeof(float));
+    
+    if((newCRN->nu_minus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((newCRN->nu_plus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((newCRN->c = (float *)malloc(newCRN->M*sizeof(float))) == NULL);
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     
     /*copy data to valid arrays*/
     for (i=0;i<newCRN->N*newCRN->M;i++)
@@ -216,16 +242,17 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
 int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwork data)
 {
     int i,j;
+
     if (stream == NULL)
     {
-        SSAL_HandleError(SSAL_IO_ERROR,"SSAL_WriteChemicalReactionNetwork",__LINE__,1,0,NULL);
+        return SSAL_IO_ERROR;
     }
 
     /*print species data*/
     fprintf(stream,"Chemical Species:\n");
     for (i=0;i<data.N;i++)
     {
-        fprintf(stream,"\tX[%d]: %s\n",i,data.names[i]);    
+        fprintf(stream,"\tX[%d]: %s\n",i,data.names[i]);
     }
 
     /*print equations*/
@@ -267,11 +294,25 @@ int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwor
  */
 int SSAL_WriteSimulation(FILE *stream, SSAL_Simulation sim)
 {
+    int rc;
+    char * funcname;
+    funcname = "SSAL_WriteSimulation";
     switch (sim.type)
     {
         case SSAL_REALISATIONS:
-            SSAL_WriteRealisationsSim(stream,sim.sim);
+            rc = SSAL_WriteRealisationsSim(stream,sim.sim);
             break;
+        case SSAL_EXPECTEDVALUE:
+            rc = SSAL_UNSUPPORTED_ERROR;
+            break;
+        default:
+            rc = SSAL_UNKNOWN_TYPE_ERROR;
+            break;
+    }
+
+    if (rc < 0)
+    {
+        SSAL_HandleError(rc,funcname,__LINE__,0,1,NULL);
     }
 }
 
@@ -285,7 +326,7 @@ int SSAL_WriteRealisationsSim(FILE * stream, SSAL_RealisationSimulation * sim)
     int i,j,r;
     if (stream == NULL)
     {
-        SSAL_HandleError(SSAL_IO_ERROR,"SSAL_WriteRealisationSim",__LINE__,1,0,NULL);
+        return SSAL_IO_ERROR;
     }
 
     fprintf(stream,"\"Time\"");
@@ -327,19 +368,38 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
     char * obsArray;
     SSAL_Simulation newSim;
     SSAL_RealisationSimulation *newRS;
+    char * funcname;
+    funcname = "SSAL_CreateRealisationsSim";
+
     newSim.type = SSAL_REALISATIONS;
     newSim.model = model;
-    newRS = (SSAL_RealisationSimulation*)malloc(sizeof(SSAL_RealisationSimulation));
+    
+    if((newRS = (SSAL_RealisationSimulation*)malloc(sizeof(SSAL_RealisationSimulation)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+
     newSim.sim = (void*)newRS;
+
     /*allocate memory*/
     newRS->NR = NR;
     newRS->NT = NT;
-    newRS->T = (float *)malloc(NT*sizeof(float));
+    
+    if((newRS->T = (float *)malloc(NT*sizeof(float)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     /**@todo extend to handle multiple scenarios */
     newRS->NIC = 1; 
     newRS->Nvar = N;
-    obsArray = (char *)malloc(N*SSAL_MAX_NAME_SIZE*sizeof(char));
-    newRS->var = (char **)malloc(N*sizeof(char*));
+    if((obsArray = (char *)malloc(N*SSAL_MAX_NAME_SIZE*sizeof(char)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((newRS->var = (char **)malloc(N*sizeof(char*)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     for (i=0;i<newRS->Nvar;i++)
     {
         newRS->var[i] = obsArray + i*SSAL_MAX_NAME_SIZE;
@@ -385,8 +445,7 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
         }
             break;
         default:
-            SSAL_HandleError(SSAL_UNKNOWN_TYPE,"SSAL_CreateRealisationsSimulation",
-                            __LINE__,1,0,NULL);        
+            SSAL_HandleError(SSAL_UNKNOWN_TYPE,funcname, __LINE__,1,0,NULL);        
             break;
     }
     

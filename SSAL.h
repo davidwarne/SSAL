@@ -24,11 +24,13 @@
 #include <string.h>
 #include "SSAL_internal.h"
 /*error codes*/
-#define SSAL_SUCCESS            0
-#define SSAL_INVALID_OPTION     -1
-#define SSAL_UNKNOWN_OPTION     -2
-#define SSAL_IO_ERROR           -3
-#define SSAL_UNKNOWN_TYPE       -4
+#define SSAL_SUCCESS                    0
+#define SSAL_INVALID_OPTION_ERROR       -1
+#define SSAL_UNKNOWN_OPTION_ERROR       -2
+#define SSAL_IO_ERROR                   -3
+#define SSAL_UNKNOWN_TYPE_ERROR         -4
+#define SSAL_MEMORY_ERROR               -5
+#define SSAL_UNSUPPORTED_ERROR          -6
 
 /*option codes*/
 #define SSAL_MAX_NAME_SIZE      128
