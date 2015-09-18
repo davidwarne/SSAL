@@ -345,6 +345,9 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
         newRS->var[i] = obsArray + i*SSAL_MAX_NAME_SIZE;
     }
 
+    /*data is always un-allocated first as it is model dependent*/
+    newRS->output = NULL;
+
     /*copy data */
     for (i=0;i<newRS->NT;i++)
     {
@@ -378,6 +381,91 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             for (i=0; i<(newRS->Nvar)*(CRN->N); i++)
             {
                 newRS->IC[i] = initCond[i];
+            }
+        }
+            break;
+        default:
+            SSAL_HandleError(SSAL_UNKNOWN_TYPE,"SSAL_CreateRealisationsSimulation",
+                            __LINE__,1,0,NULL);        
+            break;
+    }
+    
+    return newSim;
+}
+
+/**
+ * @brief Creates an Expected Value simulation structure
+ * @detail pre-allocates memory in an efficient structure for the model and algorithm
+ * @param model a pointer referencing the model realisations will be made of
+ * @param N number of variables to observe
+ * @param obs a pointer of model entities to observe
+ * @param NR number of realisations
+ * @param NT number of time points to record
+ * @param T time points to record
+ * @param initCond initial conditions 
+ */
+SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs, int NR, int NT, 
+                                float* T, float * initCond)
+{
+    int i;
+    char * obsArray;
+    SSAL_Simulation newSim;
+    SSAL_ExpectedValueSimulation *newEVS;
+    newSim.type = SSAL_EXPECTEDVALUE;
+    newSim.model = model;
+    newEVS = (SSAL_ExpectedValueSimulation*)malloc(sizeof(SSAL_ExpectedValueSimulation));
+    newSim.sim = (void*)newEVS;
+    /*allocate memory*/
+    newEVS->NR = NR;
+    newEVS->NT = NT;
+    newEVS->T = (float *)malloc(NT*sizeof(float));
+
+    /**@todo extend to handle multiple scenarios */
+    newEVS->NIC = 1; 
+    newEVS->Nvar = N;
+    obsArray = (char *)malloc(N*SSAL_MAX_NAME_SIZE*sizeof(char));
+    newEVS->var = (char **)malloc(N*sizeof(char*));
+    for (i=0;i<newEVS->Nvar;i++)
+    {
+        newEVS->var[i] = obsArray + i*SSAL_MAX_NAME_SIZE;
+    }
+
+    /*data is always un-allocated first as it is model dependent*/
+    newEVS->E = NULL;
+    newEVS->V = NULL;
+    /*copy data */
+    for (i=0;i<newEVS->NT;i++)
+    {
+        newEVS->T[i] = T[i];
+    }
+    for (i=0;i<newEVS->Nvar;i++)
+    {
+        int j;
+        for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
+        {
+            newEVS->var[i][j] = obs[i][j];
+            if (obs[i][j] == '\0');
+            {
+                continue;
+            }
+        }
+        newEVS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
+    }
+
+
+    /*setting initial condition sizes are dependent on the model*/
+    switch (model->type)
+    {
+        case SSAL_CHEMICAL_REACTION_NETWORK:
+        {
+            SSAL_ChemicalReactionNetwork *CRN;
+            CRN = (SSAL_ChemicalReactionNetwork *)model->model;
+            
+            /*initial conditions will be the initial chemical species copy numbers*/
+            newEVS->IC = (float *)malloc((newEVS->Nvar)*(CRN->N)*sizeof(float));
+            for (i=0; i<(newEVS->Nvar)*(CRN->N); i++)
+            {
+                newEVS->IC[i] = initCond[i];
             }
         }
             break;
@@ -431,6 +519,7 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
             SSAL_SimulateCRNRealisations(sim->sim,sim->model->model,alg,argc,argv);
             break;
         case SSAL_EXPECTEDVALUE:
+            SSAL_SimulateCRNExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
             break;
         default:
             break;
@@ -455,30 +544,31 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     int var[sim->Nvar];
     float nu[model->N*model->M];
     float * X_rj;
+    int varInd[sim->Nvar];
+
+    for (i=0;i<sim->Nvar;i++)
+    {
+        for (j=0;j<model->N;j++)
+        {
+            if (!strcmp(sim->var[i],model->names[j]))
+            {
+                varInd[i] = j;
+            }
+        }
+    }
+
+    for (i=0;i<model->N*model->M;i++)
+    {
+        nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
+    }
+    
+    X_rj = (float *)malloc(sim->NR*sim->NT*sim->Nvar*sizeof(float));
 
     /*algorithm selector*/ 
     switch(alg)
     {
         case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
         {
-            int varInd[sim->Nvar];
-
-            for (i=0;i<sim->Nvar;i++)
-            {
-                for (j=0;j<model->N;j++)
-                {
-                    if (!strcmp(sim->var[i],model->names[j]))
-                    {
-                        varInd[i] = j;
-                    }
-                }
-            }
-
-            for (i=0;i<model->N*model->M;i++)
-            {
-                nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
-            }
-            X_rj = (float *)malloc(sim->NR*sim->NT*sim->Nvar*sizeof(float));
             for (j=0;j<sim->NR;j++)
             {
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
@@ -495,6 +585,100 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     sim->output =  X_rj;
 }
  
+ /**
+ * @brief Compute Expected value on a Chemical Reaction Network model
+ * @param sim an Expected Value Simulation structure
+ * @param model a Chemical Reaction network model
+ * @param alg the selected algorithm type
+ * @param argc the number of args
+ * @param argv input ags
+ */
+int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim, 
+            SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
+{
+    int j,i;
+    int nvar;
+    int var[sim->Nvar];
+    float nu[model->N*model->M];
+    float * X_r;
+    float * E_X;
+    float * V_X;
+    int varInd[sim->Nvar];
+
+    for (i=0;i<sim->Nvar;i++)
+    {
+        for (j=0;j<model->N;j++)
+        {
+            if (!strcmp(sim->var[i],model->names[j]))
+            {
+                varInd[i] = j;
+            }
+        }
+    }
+
+    for (i=0;i<model->N*model->M;i++)
+    {
+        nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
+    }
+
+    X_r = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
+    E_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
+    V_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
+    for (i=0;i<model->N;i++)
+    {
+        E_X[i] = 0;
+    }
+    for (i=0;i<model->N;i++)
+    {
+        E_X[i] = 0;
+    }
+    /*algorithm selector*/ 
+    switch(alg)
+    {
+        case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
+        {
+                        
+            for (j=0;j<sim->NR;j++)
+            {
+                segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                    nu,model->c,sim->Nvar,varInd,X_r);
+                
+                for (i=0;i<model->N;i++)
+                {
+                    E_X[i] += X_r[i];
+                }
+                for (i=0;i<model->N;i++)
+                {
+                    V_X[i] += X_r[i]*X_r[i];
+                }
+            }
+
+            }
+            break;
+        case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
+            break;
+        default:
+            break;
+    }
+
+    for (i=0;i<model->N;i++)
+    {
+        E_X[i] /= (float)(sim->NR);
+    }
+    for (i=0;i<model->N;i++)
+    {
+        V_X[i] /= (float)(sim->NR);
+    }
+    for (i=0;i<model->N;i++)
+    {
+        V_X[i] -= E_X[i];
+    }
+
+    sim->E =  E_X;
+    sim->V =  V_X;
+}
+ 
+
 /**
  * @brief utilitiy function which breaks a char array into a array of char arrays
  * @param argc arg count

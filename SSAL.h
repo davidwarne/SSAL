@@ -148,6 +148,32 @@ struct SSAL_RealisationSimulation_struct {
 /** type name for  SSAL_RealisationSimulation_struct*/
 typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
+/**
+ * realisation simulation
+ */
+struct SSAL_ExpectedValueSimulation_struct {
+    /**numbr of observation times */
+    int NT;
+    /** observation times */
+    float *T;
+    /** number of realisations*/
+    int NR;
+    /**number of initial conditions */
+    int NIC;
+    /** initial conditions */
+    float *IC;
+    /** number od vvariables to observe */
+    int Nvar;
+    /** model variables to observe by name */
+    char **var;
+    /** output data*/
+    float *E;
+    float *V;
+};
+/** type name for  SSAL_ExpectedValueSimulation_struct*/
+typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
+
+
 
 /* function prototypes*/
 
@@ -159,11 +185,15 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int,
                             float * restrict , float * restrict , float * restrict );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 float*, float * );
+SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *,int, char **, int, int, 
+                                float*, float * );
 int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 
 int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
+int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *, 
+            SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType , int , char **);
 
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);

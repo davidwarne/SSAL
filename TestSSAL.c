@@ -33,7 +33,8 @@ int main(int argc , char ** argv)
     /* build chemical reaction network*/
     CRN = SSAL_CreateChemicalReactionNetwork(names,m,n,nu_minus,nu_plus,c);
     /* build realisation simulation */
-    sim = SSAL_CreateRealisationsSim(&CRN,n,names,N,NT,T,X0);
+    //sim = SSAL_CreateRealisationsSim(&CRN,n,names,N,NT,T,X0);
+    sim = SSAL_CreateExpectedValueSim(&CRN,n,names,N,NT,T,X0);
     /*write the CRN*/
     //SSAL_WriteChemicalReactionNetwork(stdout,*((SSAL_ChemicalReactionNetwork *)(CRN.model)));
     /*simulate realisations*/
