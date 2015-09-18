@@ -1,7 +1,22 @@
-
-#include "SSAL_sequential.h"
-#include "SSAL_util.h"
-#include "SSAL_RNG.h"
+/* SSAL: Stochastic Simulation Algorithm Library
+ * Copyright (C) 2015  David J. Warne
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include "ESSA_sequential.h"
+#include "util_sequential.h"
+//#include "SSAL_RNG.h"
 /**
  * @brief Single Precision Gillespie exact stochastic simulation algorithm (eSSA)
  * @details Simulates a discrete-state continuous time Markov process.
@@ -39,17 +54,17 @@ int segils(int m,int n,int nt,float * restrict T, float * restrict X0, float *re
     }
 
     /*compute propensities*/
-    suhzds(m,n,nu_minus,X,a);
-
+    suhzds(m,n,nu_minus,c,X,a);
+    
     /*total propensity*/
     a_0 = 0;
-    for (j=0;j<n;j++)
+    for (j=0;j<m;j++)
     {
         a_0 += a[j];
     }
 
     /*generate time to next reaction dt ~ Exp(a_0)*/
-    r1 = ((float)rand())/((float)ONE_ON_RAND_MAX);
+    r1 = ((float)rand())*ONE_ON_RAND_MAX;
     deltat = -log(r1)/a_0;
 
     t=0;
@@ -63,13 +78,13 @@ int segils(int m,int n,int nt,float * restrict T, float * restrict X0, float *re
             /* sample discrete distribution to determine the reaction
              * channel 
              */
-            r2 = ((float)rand())/((float)ONE_ON_RAND_MAX);
-            a_sum = 0;
+            r2 = ((float)rand())*ONE_ON_RAND_MAX;
+            a_sum = a[0];
             k = 0;
             while (a_sum <= a_0*r2 && k < m - 1)
             {
-                k++
-                a_sum += a[k]
+                k++;
+                a_sum += a[k];
             }
 
             /*update state*/
@@ -82,22 +97,23 @@ int segils(int m,int n,int nt,float * restrict T, float * restrict X0, float *re
 
             /*update propensities*/
             suhzds(m,n,nu_minus,c,X,a);
+
             /*total propensity*/
             a_0 = 0;
-            for (j=0;j<n;j++)
+            for (j=0;j<m;j++)
             {
                 a_0 += a[j];
             }
         
             /*generate time to next reaction dt ~ Exp(a_0)*/
-            r1 = ((float)rand())/((float)ONE_ON_RAND_MAX);
+            r1 = ((float)rand())*ONE_ON_RAND_MAX;
             deltat = -log(r1)/a_0;
         }
 
         /*record our next measurement*/
         for (i=0;i<ndims;i++)
         {
-            X_r[ndims*ti + i] = X[dims[i]];
+            X_r[i*nt + ti] = X[dims[i]];
         }
     } 
 

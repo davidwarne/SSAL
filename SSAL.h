@@ -62,13 +62,13 @@ enum SSAL_AlgorithmType_enum {
 /** type name for  SSAL_Algorithm_enum*/
 typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
 
-enum ModelType_enum {
+enum SSAL_ModelType_enum {
     SSAL_CHEMICAL_REACTION_NETWORK
 };
 /** type name for  SSAL_ModelType_enum*/
 typedef enum SSAL_ModelType_enum SSAL_ModelType;
 
-enum SimulationType_enum {
+enum SSAL_SimulationType_enum {
     SSAL_REALISATIONS,
     SSAL_EXPECTEDVALUE
 };
@@ -81,7 +81,9 @@ typedef enum SSAL_SimulationType_enum SSAL_SimulationType;
 struct SSAL_Model_struct {
     SSAL_ModelType type;
     void *model;
-}
+};
+/** type name for  SSAL_Model struct*/
+typedef struct SSAL_Model_struct SSAL_Model;
 
 /**
  * @struct SSAL_ChemicalReactionNetwork_struct
@@ -116,7 +118,7 @@ struct SSAL_Simulation_struct{
      */
     SSAL_SimulationType type;
     /** model to use in simulation */
-    SSAL_model *model;
+    SSAL_Model *model;
     void *sim;
 };
 /** type name for  SSAL_Simulation_struct*/
@@ -149,19 +151,23 @@ typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
 /* function prototypes*/
 
-int SSAL_Inititalise(int,char **); 
+void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
+
+int SSAL_Initialise(int,char **); 
+
 SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
                             float * restrict , float * restrict , float * restrict );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 float*, float * );
-int SSAL_Simulate(SSAL_Simulation, SSAL_AlgorithmType, const char *);
-int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
-int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
-void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
+int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 
-int SSAL_SimulateRealisations(SSAL_RealisationSimulation *, SSAL_AlgorithmType, const char *);
+int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
+
+int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
+int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
+int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
 
 char** SSAL_UtilTokeniseArgs(int *,const char *);
 #endif

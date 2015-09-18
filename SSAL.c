@@ -99,7 +99,7 @@ void SSAL_HandleError(int errCode, char * funcName, int lineNum, unsigned char f
  * @todo Will add more options here as needed.
  * @retVal SSAL_SUCCESS if initialisation was successful
  */
-int SSAL_Inititalise(int argc,char **argv)
+int SSAL_Initialise(int argc,char **argv)
 {
     int i;
     /*search for config options*/
@@ -114,14 +114,14 @@ int SSAL_Inititalise(int argc,char **argv)
     }
 
     /*set defaults*/
-    SSAL_GLOBAL_Options.parallel_enabled = 1;
+    //SSAL_GLOBAL_Options.parallel_enabled = 1;
     
     /*parse args*/
     for (;i<argc;i++)
     {
         if (!strcmp("--no-parallel",argv[i]))
         {
-            SSAL_GLOBAL_Options.parallel_enabled = 0;
+            //SSAL_GLOBAL_Options.parallel_enabled = 0;
         }
         else
         {
@@ -248,7 +248,7 @@ int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwor
         fprintf(stream,"\t\t |");
         for (i=0;i<data.N;i++)
         {
-            fprintf(stream," %f",data.nu_minus[j*data.N + i]);
+            fprintf(stream," %f",data.nu_plus[j*data.N + i]);
         }
         fprintf(stream," |\n");
     }
@@ -258,6 +258,55 @@ int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwor
         fprintf(stream,"\tc[%d] = %f\n",i,data.c[i]);
     }
     return SSAL_SUCCESS; 
+}
+
+/**
+ * @brief write the simulation results to file
+ * @param stream the output stream
+ * @param sim a Simulation struct
+ */
+int SSAL_WriteSimulation(FILE *stream, SSAL_Simulation sim)
+{
+    switch (sim.type)
+    {
+        case SSAL_REALISATIONS:
+            SSAL_WriteRealisationsSim(stream,sim.sim);
+            break;
+    }
+}
+
+/**
+ * @brief Write realisation data to a file
+ * @param stream the output stream
+ * @param sim the realisation sim to export
+ */
+int SSAL_WriteRealisationsSim(FILE * stream, SSAL_RealisationSimulation * sim)
+{
+    int i,j,r;
+    if (stream == NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,"SSAL_WriteRealisationSim",__LINE__,1,0,NULL);
+    }
+
+    fprintf(stream,"\"Time\"");
+    for (i = 0;i<sim->NT;i++)
+    {
+       fprintf(stream,",%f",sim->T[i]);
+    }
+    fprintf(stream,"\n");
+
+    for (r=0;r<sim->NR;r++)
+    {
+       for (j=0;j<sim->Nvar;j++)
+        {
+            fprintf(stream,"\"%s\"",sim->var[j]);
+            for (i=0;i<sim->NT;i++)
+            {
+                fprintf(stream,",%f",sim->output[r*(sim->Nvar*sim->NT) + j*(sim->NT) + i]);
+            }
+            fprintf(stream,"\n");
+        }
+    }
 }
 
 /**
@@ -325,10 +374,10 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
             
             /*initial conditions will be the initial chemical species copy numbers*/
-            newRS->initCond = (float *)malloc((newRS->Nvar)*(CRN->N)*sizeof(float));
+            newRS->IC = (float *)malloc((newRS->Nvar)*(CRN->N)*sizeof(float));
             for (i=0; i<(newRS->Nvar)*(CRN->N); i++)
             {
-                newRS->initCond[i] = initCond[i];
+                newRS->IC[i] = initCond[i];
             }
         }
             break;
@@ -337,7 +386,8 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
                             __LINE__,1,0,NULL);        
             break;
     }
-    return newModel;
+    
+    return newSim;
 }
 
 
@@ -353,15 +403,12 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
 int SSAL_Simulate(SSAL_Simulation *sim, SSAL_AlgorithmType alg, const char * args)
 {
     int rc;
-    switch(sim->type)
+    switch(sim->model->type)
     {   
-        case SSAL_REALISATIONS:
-            rc = SSAL_SimulationRealisations(sim->sim,alg,args);
-            break;
-        case SSAL_EXPECTEDVALUE:
+        case SSAL_CHEMICAL_REACTION_NETWORK:
+            rc = SSAL_SimulateCRN(sim,alg,args);
             break;
         default:
-            
             break;
     }
 }
@@ -372,22 +419,24 @@ int SSAL_Simulate(SSAL_Simulation *sim, SSAL_AlgorithmType alg, const char * arg
  * @param alg the selected algorithm type
  * @param args algorithm specific args
  */
-int SSAL_SimulateRealisations(SSAL_RealisationSimulation *sim, SSAL_AlgorithmType alg, 
+int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg, 
                         const char *args)
 {
     int argc;
-    char **argv
-    argv = SSAL_UtilTokeniseArgs(&argc,args);
-    switch (sim->model->type)
+    char **argv;
+    //argv = SSAL_UtilTokeniseArgs(&argc,args);
+    switch (sim->type)
     {
-        case SSAL_CHEMICAL_REACTION_NETWORK:
-            SSAL_SimulateCRNRealisations(sim,model->model,alg,argc,argv);
+        case SSAL_REALISATIONS:
+            SSAL_SimulateCRNRealisations(sim->sim,sim->model->model,alg,argc,argv);
+            break;
+        case SSAL_EXPECTEDVALUE:
             break;
         default:
             break;
     }
     /*the first pointer is a pointer to the whole array*/
-    free(argv[0]);
+    //free(argv[0]);
 }
 
 /**
@@ -405,20 +454,35 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     int nvar;
     int var[sim->Nvar];
     float nu[model->N*model->M];
+    float * X_rj;
 
     /*algorithm selector*/ 
     switch(alg)
     {
         case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
         {
-            for (i=0;i<n*m;i++)
+            int varInd[sim->Nvar];
+
+            for (i=0;i<sim->Nvar;i++)
+            {
+                for (j=0;j<model->N;j++)
+                {
+                    if (!strcmp(sim->var[i],model->names[j]))
+                    {
+                        varInd[i] = j;
+                    }
+                }
+            }
+
+            for (i=0;i<model->N*model->M;i++)
             {
                 nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
             }
-            X_rj = (float *)malloc(N*nt*n*sizeof(float));
-            for (j=0;j<N;j++)
+            X_rj = (float *)malloc(sim->NR*sim->NT*sim->Nvar*sizeof(float));
+            for (j=0;j<sim->NR;j++)
             {
-                segils(model->M,model->N,nt,T,X0,nu_minus,nu,c,vars,X_rj+j*(nt*n));
+                segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                    nu,model->c,sim->Nvar,varInd,X_rj+j*(sim->NT*sim->Nvar));
             }
         }
             break;
@@ -428,7 +492,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             break;
     }
 
-    sim->output = (void*) X_rj;
+    sim->output =  X_rj;
 }
  
 /**
@@ -464,8 +528,8 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
         prev_char = cur_char;
         cur_char = args[i];
     }
-    
-    buf = (char *)malloc((numChar+numArgs)*sizeof(char));
+    argsLength = i; 
+    buf = (char *)malloc((numChars+numArgs)*sizeof(char));
     argv = (char **)malloc(numArgs*sizeof(char*));
     j = 0;
     k = 0;
@@ -494,11 +558,11 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
         }
     }
     /*append null characters*/
-    for (k=1;k<numArgs;k++;)
+    for (k=1;k<numArgs;k++)
     {
         argv[k][-1] = '\0';
     }
-    buf[numChar+numArgs - 1] = '\0';
+    buf[numChars+numArgs - 1] = '\0';
     *argc = numArgs;
     return argv;
 }

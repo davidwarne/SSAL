@@ -35,7 +35,7 @@
 
 #ifdef __SERIAL__
 #include "ESSA_sequential.h"
-#include "ASSA_sequential.h"
+//#include "ASSA_sequential.h"
 #endif
 
 #ifdef __PARALLEL__
