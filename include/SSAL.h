@@ -202,6 +202,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *,
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
 int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
+int SSAL_WriteExpectedValueSim(FILE *, SSAL_ExpectedValueSimulation *);
 
 char** SSAL_UtilTokeniseArgs(int *,const char *);
 #endif

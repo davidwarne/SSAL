@@ -27,7 +27,6 @@
  */
 #include<stdlib.h>
 #include<stdio.h>
-#include<unistd.h>
 #include "SSAL.h"
 
 #define NT 5
@@ -40,7 +39,6 @@ int main(int argc , char ** argv)
     float T[NT];
     int model;
     char opts[256];
-    char ch;
     SSAL_AlgorithmType algType;
     SSAL_Model CRN;
     SSAL_Simulation sim;
@@ -52,31 +50,28 @@ int main(int argc , char ** argv)
     opts[0] = '\0';
 
     /*get input args with getops*/
-    opterr = 0;
-    while ((ch = getopt(argc,argv,"n:t:h:m:T:")) != -1)
+    for (i=0;i<argc;i++)
     {
-        switch(ch)
+        if (!strcmp("-n",argv[i]))
         {
-            case 'n':
-                NR = (int)atoi(optarg);
-                break;
-            case 't':
-                T[NT-1] = (float)atof(optarg);
-                break;
-            case 'm':
-                model = (int)atoi(optarg);
-                break;
-            case 'T': /*specifiying tau invokes tau leap method*/
-                algType = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;           
-                sprintf(opts,"--tau %s",optarg);
-                break;
-            default:
-            case '?':
-                fprintf(stderr,"Unknown Option -%s\n",optarg);
-            case 'h':
-                fprintf(stderr,"Usage: %s [-n numRealisations] [-t endTime] [-m model] [-T tau]\n");
-                break;
-                break;
+            NR = (int)atoi(argv[++i]);
+        }
+        else if (!strcmp("-t",argv[i]))
+        {
+            T[NT-1] = (float)atof(argv[++i]);
+        }
+        else if (!strcmp("-m",argv[i]))
+        {
+            model = (int)atoi(argv[++i]);
+        }
+        else if (!strcmp("-T",argv[i]))
+        {
+            algType = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;
+            sprintf(opts,"--tau %s\n",argv[++i]);
+        }
+        else if (!strcmp("-h",argv[i]))
+        {
+            fprintf(stderr,"Usage: %s [-n numRealisations] [-t endTime] [-m model] [-T tau]\n");
         }
     }
     
@@ -107,8 +102,10 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
             }
         }
             break;
@@ -127,7 +124,9 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
             }
         }
@@ -149,7 +148,9 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
             }
         }
@@ -169,7 +170,9 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
             }
         }
@@ -190,7 +193,9 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
             }
         }
@@ -212,7 +217,9 @@ int main(int argc , char ** argv)
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
                 /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
+                //sim = SSAL_CreateRealisationsSim(
+                //    &CRN,n,names,NR,NT,T,X0);
+                sim = SSAL_CreateExpectedValueSim(
                     &CRN,n,names,NR,NT,T,X0);
             }
         }
@@ -221,10 +228,10 @@ int main(int argc , char ** argv)
     }
 
     /*write the CRN*/
-    SSAL_WriteChemicalReactionNetwork(stdout,*((SSAL_ChemicalReactionNetwork *)(CRN.model)));
+    //SSAL_WriteChemicalReactionNetwork(stdout,*((SSAL_ChemicalReactionNetwork *)(CRN.model)));
     /*simulate realisations*/
     SSAL_Simulate(&sim,algType,opts);
     /*write the data*/
-    SSAL_WriteRealisationsSim(stdout,sim.sim);
+    SSAL_WriteSimulation(stdout,sim);
     return 0;
 }

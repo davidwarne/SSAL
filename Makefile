@@ -1,11 +1,12 @@
 #!/bin/make
 
 CC = gcc
-#OPTS = -O2 -D__SERIAL__ 
-OPTS = -g -pg  -D__SERIAL__ 
+OPTS = -O2 -std=gnu99 -D__SERIAL__ 
+#OPTS = -g -pg  -D__SERIAL__ 
 #OPTS = -g
+EXPDIR=examples
 SRCDIR=src
-SRC =  $(SRCDIR)/TestSSAL.c $(SRCDIR)/SSAL.c $(SRCDIR)/segils.c $(SRCDIR)/satauls.c $(SRCDIR)/suhzds.c $(SRCDIR)/suarngs.c $(SRCDIR)/surngus.c $(SRCDIR)/surngexps.c $(SRCDIR)/surngpmfs.c $(SRCDIR)/surngpois.c 
+SRC =  $(EXPDIR)/TestSSAL.c $(SRCDIR)/SSAL.c $(SRCDIR)/segils.c $(SRCDIR)/satauls.c $(SRCDIR)/suhzds.c $(SRCDIR)/suarngs.c $(SRCDIR)/surngus.c $(SRCDIR)/surngexps.c $(SRCDIR)/surngpmfs.c $(SRCDIR)/surngpois.c 
 OBJS = $(SRC:.c=.o)
 INC = -I ./include/ 
 BIN = TestSSAL

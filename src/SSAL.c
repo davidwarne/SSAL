@@ -310,7 +310,7 @@ int SSAL_WriteSimulation(FILE *stream, SSAL_Simulation sim)
             rc = SSAL_WriteRealisationsSim(stream,sim.sim);
             break;
         case SSAL_EXPECTEDVALUE:
-            rc = SSAL_UNSUPPORTED_ERROR;
+            rc = SSAL_WriteExpectedValueSim(stream,sim.sim);
             break;
         default:
             rc = SSAL_UNKNOWN_TYPE_ERROR;
@@ -320,6 +320,44 @@ int SSAL_WriteSimulation(FILE *stream, SSAL_Simulation sim)
     if (rc < 0)
     {
         SSAL_HandleError(rc,funcname,__LINE__,0,1,NULL);
+    }
+}
+
+/**
+ * @brief Write expected value data to a file
+ * @param stream the output stream
+ * @param sim the expected value simulation to export
+ */
+int SSAL_WriteExpectedValueSim(FILE * stream, SSAL_ExpectedValueSimulation * sim)
+{
+    int i,j,r;
+    if (stream == NULL)
+    {
+        return SSAL_IO_ERROR;
+    }
+
+    fprintf(stream,"\"Time\"");
+    for (i=0;i<sim->NT;i++)
+    {
+        fprintf(stream,",%f",sim->T[i]);
+    }
+    fprintf(stream,"\n");
+
+    for (j=0;j<sim->Nvar;j++)
+    {
+        fprintf(stream,"\"E[%s]\"",sim->var[j]);
+        for (i=0;i<sim->NT;i++)
+        {
+            fprintf(stream,",%f",sim->E[j*sim->NT + i]);
+        }
+        fprintf(stream,"\n");
+        
+        fprintf(stream,"\"V[%s]\"",sim->var[j]);
+        for (i=0;i<sim->NT;i++)
+        {
+            fprintf(stream,",%f",sim->V[j*sim->NT + i]);
+        }
+        fprintf(stream,"\n");
     }
 }
 
@@ -712,11 +750,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     X_r = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
     E_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
     V_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
-    for (i=0;i<model->N;i++)
+    for (i=0;i<model->N*sim->NT;i++)
     {
         E_X[i] = 0;
     }
-    for (i=0;i<model->N;i++)
+    for (i=0;i<model->N*sim->NT;i++)
     {
         E_X[i] = 0;
     }
@@ -732,11 +770,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,varInd,X_r);
                 
-                for (i=0;i<model->N;i++)
+                for (i=0;i<model->N*sim->NT;i++)
                 {
                     E_X[i] += X_r[i];
                 }
-                for (i=0;i<model->N;i++)
+                for (i=0;i<model->N*sim->NT;i++)
                 {
                     V_X[i] += X_r[i]*X_r[i];
                 }
@@ -752,12 +790,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             {
                 satauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,varInd,X_r,tau);
-                
-                for (i=0;i<model->N;i++)
+                for (i=0;i<model->N*sim->NT;i++)
                 {
                     E_X[i] += X_r[i];
                 }
-                for (i=0;i<model->N;i++)
+                for (i=0;i<model->N*sim->NT;i++)
                 {
                     V_X[i] += X_r[i]*X_r[i];
                 }
@@ -768,15 +805,15 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             break;
     }
 
-    for (i=0;i<model->N;i++)
+    for (i=0;i<model->N*sim->NT;i++)
     {
         E_X[i] /= (float)(sim->NR);
     }
-    for (i=0;i<model->N;i++)
+    for (i=0;i<model->N*sim->NT;i++)
     {
         V_X[i] /= (float)(sim->NR);
     }
-    for (i=0;i<model->N;i++)
+    for (i=0;i<model->N*sim->NT;i++)
     {
         V_X[i] -= E_X[i];
     }
