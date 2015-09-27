@@ -210,7 +210,7 @@ int main(int argc , char ** argv)
             {
                 float nu_minus[12] = {1,0,0,0,1,0,2,0,0,0,1,0};
                 float nu_plus[12] = {0,0,0,0,0,1,0,1,0,2,0,0};
-                float c[4] = {0.04,0.002,0.5};
+                float c[4] = {1,0.04,0.002,0.5};
                 char *names[3] = {"S1","S2","S3"};
                 float X0[3] = {100000,0,0};
                 /* build chemical reaction network*/

@@ -817,6 +817,10 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     {
         V_X[i] -= E_X[i];
     }
+    for (i=0;i<model->N*sim->NT;i++)
+    {
+        V_X[i] /= (float)(sim->NR);
+    }
 
     sim->E =  E_X;
     sim->V =  V_X;
