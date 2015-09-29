@@ -45,13 +45,87 @@
  * @param dims the dimensions indices 
  * @param E_X expected value of f(X(T))
  * @param V_X varience of f(X(T))
- * @param f functional of state vector f : \mathbb{Z}^n -> \mathbb{R}
+ * @param f functional of state vector f : \mathbb{Z}^n -> \mathbb{R} 
  *
  * @param if f == NULL then the expected state vector is used
  *
  */
 int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float * restrict nu_minus,
-    float * restrict nu, float * restrict c, float tau0, int M, int L, float epsilon, int ndims,int restrict dims, float * restrict E_X, float * restrict V_X, float (*f)(int,float *))
+    float * restrict nu, float * restrict c, float tau0, int M, int L, float epsilon, int ndims,int restrict dims, float * restrict E_X, float * restrict V_X, int (*f)(int,float *, float *))
 {
+    int i,j,l; 
+    int nl[L]; /*sample sizes for each level*/
+    int nt;
 
+    y4yfor (i=0;i<nt*ndims;i++)
+    {
+        E_X[i]  = 0;
+    }
+
+    for (i=0;i<nt*ndims;i++)
+    {
+        V_X[i] = 0;
+    }
+
+    /*timing analysis for each level*/
+    
+
+    /*run level 0 samples*/
+    for (j=0;j<nl[0];j++)
+    {
+        float Z_0_r[nt*ndims];
+        float fZ_0_r[nt*ndims];
+        /*Tau-leaping for Z_0(t) for t = T[0],...,T[nt-1]*/
+        satauls(m,n,nt,T,X0,nu_minus,nu,c,ndims,dims,Z_0_r,tau0);
+        /*evaluate functional f(Z_0(t))*/
+        (*f)(n,Z_0_r,fZ_0_r);
+        /*accumulate fZ*/
+        for (i=0;i<nt*ndims;i++)
+        {
+            E_X[i] += fZ_0_r[i];
+        }
+    }
+
+    /*level 0 approximation with high statistical biased*/
+    for (i=0;i<nt*dims;i++)
+    {
+        E_X[i] /= (float)nl[0];
+    }
+
+    /*run each bias correction term*/
+    for (l=1:l<L;l++)
+    {
+        float E_l[nt*ndims];
+        for (i=0;i<nt*ndims;i++)
+        {
+            E_l[i] = 0;
+        }
+        for (j=0;j<nl[l];j++)
+        {
+            float Z_l_r[nt*ndims];
+            float fZ_l_r[nt*ndims];
+            float Z_lm1_r[nt*ndims];
+            float fZ_lm1_r[nt*ndims];
+            /*run correlated  Z_l(t),Z_{l-1}(t)*/ 
+            sactauls(m,n,nt,X0,nu_minus,nu,ndims,dims,Z_l_r,Z_lm1_r,l,tau0,M);
+            /*evaluate functional f(Z_l(t) and f(Z_{l-1}(t))*/
+            (*f)(n,Z_l_r,fZ_l_r);
+            (*f)(n,Z_lm1_r,fZ_lm1_r);
+            for (i=0;i<nt*ndims;i++)
+            {
+                E_l[i] += (fZ_l_r[i] - fZ_lm1_r[i]);
+            }
+        }
+       
+        /*level l bias correction*/
+        for (i=0;i<nt*dims;i++)
+        {
+            E_l[i] /= (float)nl[l];
+        }
+        /*add to E_X*/
+        for (i=0;i<nt*ndims;i++)
+        {
+            E_X[i] += E_l[i];
+        }
+    }
 }
