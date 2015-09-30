@@ -50,12 +50,14 @@ int satauls(int m,int n,int nt,float * restrict T, float * restrict X0, float *r
         X[i] = X0[i];
     }
 
-    suhzds(m,n,nu_minus,c,X,a);
 
     for (ti=0;ti<nt;ti++)
     {
         for (;t <= T[ti];t+=tau)
         {
+            /*update propensities*/
+            suhzds(m,n,nu_minus,c,X,a);
+            
             /*generate poisson variates*/
             for (j=0;j<m;j++)
             {
@@ -70,8 +72,6 @@ int satauls(int m,int n,int nt,float * restrict T, float * restrict X0, float *r
                     X[i] += p[j]*nu[j*n +i];
                 }
             }
-            /*update propensities*/
-            suhzds(m,n,nu_minus,c,X,a);
         }
 
         /*write out timestep*/
@@ -80,6 +80,6 @@ int satauls(int m,int n,int nt,float * restrict T, float * restrict X0, float *r
             X_r[i*nt+ti] = X[dims[i]];
         }
     }
-
+    return 0;
 }
 

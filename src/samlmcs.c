@@ -51,13 +51,15 @@
  *
  */
 int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float * restrict nu_minus,
-    float * restrict nu, float * restrict c, float tau0, int M, int L, float epsilon, int ndims,int restrict dims, float * restrict E_X, float * restrict V_X, int (*f)(int,float *, float *))
+    float * restrict nu, float * restrict c, float tau0, int M, int L, float epsilon, 
+    int ndims,int restrict dims, float * restrict E_X, float * restrict V_X, int (*f)(int,float *, float *))
 {
     int i,j,l; 
     int nl[L]; /*sample sizes for each level*/
     int nt;
+    float taul;
 
-    y4yfor (i=0;i<nt*ndims;i++)
+    for (i=0;i<nt*ndims;i++)
     {
         E_X[i]  = 0;
     }
@@ -92,6 +94,7 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
         E_X[i] /= (float)nl[0];
     }
 
+    taul = tau0/((float)M);
     /*run each bias correction term*/
     for (l=1:l<L;l++)
     {
@@ -107,7 +110,7 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
             float Z_lm1_r[nt*ndims];
             float fZ_lm1_r[nt*ndims];
             /*run correlated  Z_l(t),Z_{l-1}(t)*/ 
-            sactauls(m,n,nt,X0,nu_minus,nu,ndims,dims,Z_l_r,Z_lm1_r,l,tau0,M);
+            sactauls(m,n,nt,X0,nu_minus,nu,c,ndims,dims,Z_l_r,Z_lm1_r,taul,M);
             /*evaluate functional f(Z_l(t) and f(Z_{l-1}(t))*/
             (*f)(n,Z_l_r,fZ_l_r);
             (*f)(n,Z_lm1_r,fZ_lm1_r);
@@ -116,7 +119,7 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
                 E_l[i] += (fZ_l_r[i] - fZ_lm1_r[i]);
             }
         }
-       
+
         /*level l bias correction*/
         for (i=0;i<nt*dims;i++)
         {
@@ -127,5 +130,6 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
         {
             E_X[i] += E_l[i];
         }
+        taul /= (float)M;
     }
 }
