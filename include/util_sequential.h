@@ -69,5 +69,8 @@ unsigned int surngpois(float);
 
 int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restrict);
 
+int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
+    float * restrict, float, int, int, float, int, int * restrict, 
+    int (*)(int float * float *), int * restrict);
 
 #endif

@@ -35,14 +35,14 @@
  * @param c kinetic reaction rates
  * @param ndims number of dimensions to measure 
  * @param dims vector of dimesnion indices indicating those to be mesured
- * @param Z_l_r realisation of Z_l(t)
- * @param Z_lm1_r realisation of Z_{l-1}(t) with strong correlation to Z_l(t)
  * @param tau coarse-grain level time-step fine-grain is tau/M;
  * @param M nesting factor
+ * @param Z_l_r realisation of Z_l(t)
+ * @param Z_lm1_r realisation of Z_{l-1}(t) with strong correlation to Z_l(t)
  */
 int sactauls(int m, int n, int nt, float * restrict T, float * restrict X0, 
    float * restrict nu_minus, float * restrict nu, float * restrict c, int ndims , 
-   int * restrict dims, float * restrict Z_l_r, float * restrict Z_lm1_r,float tau, int M)
+   int * restrict dims,float tau, int M, float * restrict Z_l_r, float * restrict Z_lm1_r)
 {
     float Z_c[n]; /*coarse and fine grain state vectors*/ 
     float Z_f[n];

@@ -21,6 +21,17 @@
 
 #include "util_sequential.h"
 
-int satauls(int,int,int,float * restrict, float *restrict, float * restrict, float * restrict, float *restrict, int, int * restrict, float * restrict,float);
+#define MLMC_TIMING_TRIALS 100
 
+int satauls(int,int,int,float * restrict, float *restrict, float * restrict, 
+    float * restrict, float *restrict, int, int * restrict, float, float * restrict);
+
+int sactauls(int, int, int, float * restrict, float * restrict, float * restrict, 
+    float * restrict, float * restrict, int, int * restrict, float, int, float * restrict, 
+    float * restrict);
+
+
+int samlmcbs(int, int, int, float * restrict, float * restrict, float * restrict,
+    float * restrict, float * restrict float, int, int, float, int,int restrict,
+    int (*)(int,float *, float *),float * restrict, float * restrict);
 #endif

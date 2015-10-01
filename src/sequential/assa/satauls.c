@@ -32,12 +32,11 @@
  * @param c the kinetic reaction rates
  * @param ndims numebr dimension to measure
  * @param dims the dimensions indices 
- * @param X_r state-space trajectory for measured dims (nt*ndims)
  * @param tau the discrete timestep parameter
+ * @param X_r state-space trajectory for measured dims (nt*ndims)
  */
 int satauls(int m,int n,int nt,float * restrict T, float * restrict X0, float *restrict nu_minus,
-    float * restrict nu,float * restrict c,int ndims,int *restrict dims,float *restrict X_r,
-    float tau)
+    float * restrict nu,float * restrict c,int ndims,int *restrict dims,float tau,float *restrict X_r)
 {
     float a[m]; /*propensities*/
     float X[n]; /* the state vector*/

@@ -20,6 +20,7 @@
 
 #include "util_sequential.h"
 
-int segils(int,int,int,float * restrict, float *restrict, float * restrict, float * restrict, float *restrict, int, int * restrict, float * restrict);
+int segils(int,int,int,float * restrict, float *restrict, float * restrict, 
+    float * restrict, float *restrict, int, int * restrict, float * restrict);
 
 #endif

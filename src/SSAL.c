@@ -817,6 +817,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     {
         V_X[i] -= E_X[i];
     }
+
+    /*convert variance in X to variance in the mean esitmator*/
     for (i=0;i<model->N*sim->NT;i++)
     {
         V_X[i] /= (float)(sim->NR);
