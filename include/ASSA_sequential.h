@@ -32,6 +32,6 @@ int sactauls(int, int, int, float * restrict, float * restrict, float * restrict
 
 
 int samlmcbs(int, int, int, float * restrict, float * restrict, float * restrict,
-    float * restrict, float * restrict float, int, int, float, int,int restrict,
+    float * restrict, float * restrict, float, int, int, float, int,int * restrict,
     int (*)(int,float *, float *),float * restrict, float * restrict);
 #endif

@@ -71,6 +71,6 @@ int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restri
 
 int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
     float * restrict, float, int, int, float, int, int * restrict, 
-    int (*)(int float * float *), int * restrict);
+    int (*)(int, float *, float *), int * restrict);
 
 #endif

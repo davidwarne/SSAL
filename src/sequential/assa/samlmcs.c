@@ -114,7 +114,7 @@ int samlmcs(int m,int n, int nt, float * restrict T, float * restrict X0, float 
         }
         for (i=0;i<nt*dims;i++)
         {
-            V_X[i] -= E_X[i];
+            V_X[i] -= E_X[i]*E_X[i];
         }
         for (i=0;i<nt*dims;i++)
         {
@@ -156,7 +156,7 @@ int samlmcs(int m,int n, int nt, float * restrict T, float * restrict X0, float 
             }
             for (i=0;i<nt*dims;i++)
             {
-                E_l2[i] -= E_l[i];
+                E_l2[i] -= E_l[i]*E_l[i];
             }
             /*add to E_X*/
             for (i=0;i<nt*ndims;i++)
@@ -231,7 +231,7 @@ int samlmcs(int m,int n, int nt, float * restrict T, float * restrict X0, float 
             }
             for (i=0;i<nt*dims;i++)
             {
-                E_l2[i] -= E_l[i];
+                E_l2[i] -= E_l[i]*E_l[i];
             }
             /*add to E_X*/
             for (i=0;i<nt*ndims;i++)

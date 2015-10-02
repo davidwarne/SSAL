@@ -52,7 +52,7 @@ int satauls(int m,int n,int nt,float * restrict T, float * restrict X0, float *r
 
     for (ti=0;ti<nt;ti++)
     {
-        for (;t <= T[ti];t+=tau)
+        for (;t <= (T[ti]-tau);t+=tau)
         {
             /*update propensities*/
             suhzds(m,n,nu_minus,c,X,a);

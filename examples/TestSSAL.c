@@ -72,6 +72,13 @@ int main(int argc , char ** argv)
         else if (!strcmp("-h",argv[i]))
         {
             fprintf(stderr,"Usage: %s [-n numRealisations] [-t endTime] [-m model] [-T tau]\n");
+            fprintf(stderr,"\tmodel = 1) Degradation\n");
+            fprintf(stderr,"\t        2) Production/Degradation\n");
+            fprintf(stderr,"\t        3) Dimerisation Model I (default)\n");
+            fprintf(stderr,"\t        4) Schlogl System\n");
+            fprintf(stderr,"\t        5) Schnakenberg System\n");
+            fprintf(stderr,"\t        6) Dimerisation Model II\n");
+            exit(0);
         }
     }
     

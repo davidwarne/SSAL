@@ -96,8 +96,7 @@ int segils(int m,int n,int nt,float * restrict T, float * restrict X0, float *re
             }
         
             /*generate time to next reaction dt ~ Exp(a_0)*/
-            r1 = ((float)rand())*ONE_ON_RAND_MAX;
-            deltat = -log(r1)/a_0;
+            deltat = surngexps(a_0);
         }
 
         /*record our next measurement*/
