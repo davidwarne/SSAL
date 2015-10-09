@@ -37,7 +37,7 @@
  * @param X dataset 
  * @param X_star simulated data
  */
-float rho(n,X,X_star)
+float rho(int n, float *X, float *X_star)
 {
     int i;
     float d,sum; 
@@ -57,21 +57,55 @@ float rho(n,X,X_star)
 
 /**
  * @brief ABC-rejection scheme
- * @details approximates sampling of P(theta | D) via 
+ * @details approximates sampling of P(theta | D) by sampling theta then evaluating rho
  */
-int ABCrejection(SSAL_Simulation *sim,int n, float *data,int m,float *a, float *b, float * theta, float *rho)
+int ABCrejection(SSAL_Simulation *sim,int max_n, int nacc, float *data,
+    int m,float *a, float *b, float (*rho)(int float *, float *), 
+    float * theta, float *rhoVals, int *numAccept, float *acceptRate)
 {
-    int i;
+    int i,j,k;
+    SSAL_ChemicalReactionNetwork *CRN_ptr;
+    SSAL_RealisationSimulation *RS_ptr;
+    float *X_r;
+
+    CRN_ptr = (SSAL_ChemicalReactionNetwork *)(sim.model->model);
+    RS_ptr = (SSAL_RealisationSimulation *)(sim.sim);
+    X_r = (float *)(RS_ptr->output);
+    
+    k=0;
     for (i=0;i<nsamples;i++)
     {
-        /*generate sample in theta*/
+        float d;
+        /*generate sample theta ~ U(a,b)*/
         for (j=0;j<m;j++)
         {
-            
+            CRN_ptr->c[j] = surngus(a[j],b[j]);     
         }
         
-        SSAL_Simulate
+        /*run simulation*/
+        SSAL_Simulate(sim,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
+
+        /*accept/reject*/
+        d = *rho(RS_ptr->Nvar*RS_ptr->NT,data,X_r);
+        if (d <= epsilon*epsilon)
+        {
+            rhoVals[k] = d;
+            for (j=0;j<m;j++)
+            {
+                theta[k*m + j] = CRN_prt->c[j]; 
+            }
+            k++;
+
+            if (k == nacc)
+            {
+                break;
+            }
+        }
     }
+
+    *numAccept = k;
+    *acceptRate = ((float)k)/((float)i);
+
     return 0;
 }
 
@@ -106,7 +140,8 @@ int main(int argc,char ** argv)
     float *rho; /*array to store distances*/
     float *c_sample; /*array to store samples*/
 
-    int nsamples; /*number of samples to trial*/
+    int nsamples; /*number of samples from posterior to obtain*/
+    int nMax; /*Max number of simulations runs*/
     float *T; /*time points as out summary statistic*/
     float t_end; /*simulation endtim*/
     int nt; /*size of summary statistic*/
@@ -118,6 +153,7 @@ int main(int argc,char ** argv)
     char *names[1] = {"X"}; /*species symbol names*/
     int i,j; /*loop counters*/
     SSAL_Model CRN; /*Chemical reaction model*/
+    SSAL_ChemicalReactionNetwork *CRN_ptr;
     SSAL_Simulation sim; /*simulation*/
     
     /*default values */
@@ -128,12 +164,17 @@ int main(int argc,char ** argv)
     X0 = 200.0;
     
     nsamples = 10000;
+    nMax = 1000000;
     /*get input args*/
     for (i=0;i<argc;i++)
     {
         if(!strcmp("-N",argv[i]))
         {
             nsamples = (int)atoi(argv[++i]);
+        }
+        else if (!strcmp("-MaxN",argv[i]))
+        {
+            nMax = (int)atoi(argv[++i]);
         }
         else if (!strcmp("-t",argv[i]))
         {
@@ -206,19 +247,21 @@ int main(int argc,char ** argv)
             {
                 float nu_minus[2] = {1,0};
                 float nu_plus[2] = {0,1};
-                /*default parameters of {0.1, 1.0} is a sgood start*/
+                /*default parameters of {0.1, 1.0} is a good start*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,1,nu_minus,nu_plus,c_real);
             }
         } 
     }
 
+    CRN_ptr = (SSAL_ChemicalReactionNetwork *)(CRN.model);
+
 
     /*allocate memory*/
     X_data = (float *)malloc(nt*sizeof(float));
     T = (float *)malloc(nt*sizeof(float));
     rho = (float *)malloc(nsamples*sizeof(float));
-    c_sample = (float *)malloc(nsamples*CRN.M*sizeof(float));
+    c_sample = (float *)malloc(nsamples*CRN_ptr->M*sizeof(float));
  
     /*create our simulation*/
     T[nt -1] = t_end;
@@ -229,7 +272,7 @@ int main(int argc,char ** argv)
     sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,X0);
     
     /*generate dummy data as an example*/
-    ExactSoln(model,nt,T, X0, CRN.c, X_data);
+    ExactSoln(model,nt,T, X0, CRN_ptr->c, X_data);
 
     /*apply ABC rejection method*/
     ABCrejection(&sim,,nsamples,X_data,a,b,c_sample,rho);
