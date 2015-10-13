@@ -9,10 +9,10 @@ SRCDIR=src
 UTILDIR=$(SRCDIR)/sequential/util
 ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
-SRC =  $(EXPDIR)/TestSSAL.c $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
+SRC =  $(EXPDIR)/TestABC.c  $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
 OBJS = $(SRC:.c=.o)
 INC = -I ./include/ 
-BIN = TestSSAL
+BIN = TestABC
 LIBS = -lm
 #PROFILE = -g -pg
 

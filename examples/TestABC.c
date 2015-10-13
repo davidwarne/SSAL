@@ -42,17 +42,19 @@ float rho(int n, float *X, float *X_star)
     int i;
     float d,sum; 
     sum = 0;
+
     for (i=0;i<n;i++)
     {
         sum += (X[i] - X_star[i])*(X[i]-X_star[i]);
     }
+
     d = sum;
     sum = 0;
     for (i=0;i<n;i++)
     {
         sum += X[i]*X[i];   
     }
-    return d/sum;
+    return (sum != 0) ? d/sum : d;
 }
 
 /**
@@ -60,20 +62,21 @@ float rho(int n, float *X, float *X_star)
  * @details approximates sampling of P(theta | D) by sampling theta then evaluating rho
  */
 int ABCrejection(SSAL_Simulation *sim,int max_n, int nacc, float *data,
-    int m,float *a, float *b, float (*rho)(int float *, float *), 
-    float * theta, float *rhoVals, int *numAccept, float *acceptRate)
+    int m,float *a, float *b, float (*rho)(int, float *, float *),
+    float eps, float * theta, float *rhoVals, int *numAccept, 
+    float *acceptRate)
 {
     int i,j,k;
     SSAL_ChemicalReactionNetwork *CRN_ptr;
     SSAL_RealisationSimulation *RS_ptr;
     float *X_r;
 
-    CRN_ptr = (SSAL_ChemicalReactionNetwork *)(sim.model->model);
-    RS_ptr = (SSAL_RealisationSimulation *)(sim.sim);
+    CRN_ptr = (SSAL_ChemicalReactionNetwork *)(sim->model->model);
+    RS_ptr = (SSAL_RealisationSimulation *)(sim->sim);
     X_r = (float *)(RS_ptr->output);
     
     k=0;
-    for (i=0;i<nsamples;i++)
+    for (i=0;i<max_n;i++)
     {
         float d;
         /*generate sample theta ~ U(a,b)*/
@@ -86,13 +89,13 @@ int ABCrejection(SSAL_Simulation *sim,int max_n, int nacc, float *data,
         SSAL_Simulate(sim,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
 
         /*accept/reject*/
-        d = *rho(RS_ptr->Nvar*RS_ptr->NT,data,X_r);
-        if (d <= epsilon*epsilon)
+        d = (*rho)((RS_ptr->Nvar)*(RS_ptr->NT),data,X_r);
+        if (d <= eps*eps)
         {
             rhoVals[k] = d;
             for (j=0;j<m;j++)
             {
-                theta[k*m + j] = CRN_prt->c[j]; 
+                theta[k*m + j] = CRN_ptr->c[j]; 
             }
             k++;
 
@@ -117,7 +120,7 @@ int ABCrejection(SSAL_Simulation *sim,int max_n, int nacc, float *data,
 int ExactSoln(int model,int nt, float * T, float X0, float *c, float *X)
 {
     int t;
-    if (m==1)
+    if (model == 1)
     {
         for (t=0;t<nt;t++)
         {
@@ -128,7 +131,7 @@ int ExactSoln(int model,int nt, float * T, float X0, float *c, float *X)
     {
         for (t=0;t<nt;t++)
         {
-            X[t] = c[0]/c[1] + (X0 - c[0]/c[1])*expf(-c[1]*T[t]);
+            X[t] = c[1]/c[0] + (X0 - c[1]/c[0])*expf(-c[0]*T[t]);
         }
     }
     return 0;
@@ -137,8 +140,10 @@ int ExactSoln(int model,int nt, float * T, float X0, float *c, float *X)
 int main(int argc,char ** argv)
 {
     float epsilon; /*acceptance threshold*/
-    float *rho; /*array to store distances*/
+    float *rhoV; /*array to store distances*/
     float *c_sample; /*array to store samples*/
+    int numAccept;
+    float acceptRate;
 
     int nsamples; /*number of samples from posterior to obtain*/
     int nMax; /*Max number of simulations runs*/
@@ -150,23 +155,26 @@ int main(int argc,char ** argv)
     float X0; /*initial condition*/
     float *a,*b; /*intervals of prior distributions*/
     float *c_real; /*rate parameters used to generate data*/
+    float *X_data;
     char *names[1] = {"X"}; /*species symbol names*/
     int i,j; /*loop counters*/
     SSAL_Model CRN; /*Chemical reaction model*/
     SSAL_ChemicalReactionNetwork *CRN_ptr;
+    SSAL_ExpectedValueSimulation *EV_ptr;
     SSAL_Simulation sim; /*simulation*/
+    SSAL_Simulation simData; /*simulation*/
     
     /*default values */
     nt = 1;
     t_end = 30.0;
-    model = 1
+    model = 1;
     M = 1;
     X0 = 200.0;
     
     nsamples = 10000;
     nMax = 1000000;
     /*get input args*/
-    for (i=0;i<argc;i++)
+    for (i=1;i<argc;i++)
     {
         if(!strcmp("-N",argv[i]))
         {
@@ -178,7 +186,7 @@ int main(int argc,char ** argv)
         }
         else if (!strcmp("-t",argv[i]))
         {
-            t_end = (float)argv[++i];
+            t_end = (float)atof(argv[++i]);
         }
         else if (!strcmp("-m",argv[i]))
         {
@@ -200,7 +208,7 @@ int main(int argc,char ** argv)
         }
         else if (!strcmp("-e",argv[i]))
         {
-            epsilon = (float)argv[++i];
+            epsilon = (float)atof(argv[++i]);
         }
         else if (!strcmp("-a",argv[i]))
         {
@@ -217,6 +225,11 @@ int main(int argc,char ** argv)
             {
                 b[j] = (float)atof(argv[++i]);
             }
+        }
+        else
+        {
+            fprintf(stdout,"Usage: %s -N numSample -MaxN maxTrials -t t_end -m modelID M c1,...,cM -S timepoints -X0 initialCondition -e epsilon -a a1,...,aM -b b1,...bM\n",argv[0]);
+            exit(1);
         }
     }
 
@@ -258,27 +271,36 @@ int main(int argc,char ** argv)
 
 
     /*allocate memory*/
-    X_data = (float *)malloc(nt*sizeof(float));
     T = (float *)malloc(nt*sizeof(float));
-    rho = (float *)malloc(nsamples*sizeof(float));
+    rhoV = (float *)malloc(nsamples*sizeof(float));
     c_sample = (float *)malloc(nsamples*CRN_ptr->M*sizeof(float));
- 
+     
     /*create our simulation*/
     T[nt -1] = t_end;
     for (i=0;i<(nt-1);i++)
     {
         T[i] = (T[nt-1])*(((float)i+1)/((float)nt));
     }
-    sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,X0);
-    
+    sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,&X0);
+
     /*generate dummy data as an example*/
-    ExactSoln(model,nt,T, X0, CRN_ptr->c, X_data);
+    //ExactSoln(model,nt,T, X0, CRN_ptr->c, X_data);
 
+    simData = SSAL_CreateExpectedValueSim(&CRN,1,names,100,nt,T,&X0);
+    EV_ptr = (SSAL_ExpectedValueSimulation *)(simData.sim); 
+    SSAL_Simulate(&simData,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
+  
+    X_data = EV_ptr->E;
+    for (i=0;i<nt;i++)
+    {
+        X_data[i] = round(X_data[i]);
+    }
     /*apply ABC rejection method*/
-    ABCrejection(&sim,,nsamples,X_data,a,b,c_sample,rho);
-
+    ABCrejection(&sim,nMax,nsamples, X_data,CRN_ptr->M, a, b, rho, 
+            epsilon,c_sample, rhoV, &numAccept, &acceptRate);
+    
     /*output to file*/
-    fprintf(stdout,"\"epsilon\",\"rho\",\"accepted\"");
+    fprintf(stdout,"\"epsilon\",\"rho\",\"model\",\"AcceptRate\",\"numAccepts\"");
     for (j=0;j<M;j++)
     {
         fprintf(stdout,",\"c_real%d\"",j);
@@ -288,17 +310,33 @@ int main(int argc,char ** argv)
         fprintf(stdout,",\"c_sample%d\"",j);
     }
     fprintf(stdout,"\n");
-    for (i=0;i<nsamples;i++)
+    if (numAccept != 0)
     {
-        fprintf(stdout,"%f,%f,%u",epsilon,sqrt(rho[i]),(rho[i] < epsilon*epsilon));
-        for (j=0;j<M;j++)
+        for (i=0;i<numAccept;i++)
         {
-            fprintf(stdout,",%f",c_real[j]);
+            fprintf(stdout,"%f,%f,%u,%f,%d",epsilon,sqrt(rhoV[i]),model,acceptRate,numAccept);
+            for (j=0;j<M;j++)
+            {
+                fprintf(stdout,",%f",c_real[j]);
+            }
+            for (j=0;j<M;j++)
+            {
+                fprintf(stdout,",%f",c_sample[i*CRN_ptr->M+j]);
+            }
+            fprintf(stdout,"\n");
         }
-        for (j=0;j<M;j++)
-        {
-            fprintf(stdout,",%f",c_sample[i*CRN.M+j]);
-        }
-        fprintf(stdout,"\n");
+    }
+    else
+    {
+       fprintf(stdout,"%f,%f,%u,%f,%d",epsilon,0,model,0,numAccept);
+       for (j=0;j<M;j++)
+       {
+           fprintf(stdout,",%f",c_real[j]);
+       }
+       for (j=0;j<M;j++)
+       {
+           fprintf(stdout,",%f",0);           
+       }
+       fprintf(stdout,"\n");
     }
 }

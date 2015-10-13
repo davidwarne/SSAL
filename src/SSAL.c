@@ -622,6 +622,7 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
 {
     int argc;
     char **argv;
+    int rc;
     if (args == NULL)
     {
         argc = 0;
@@ -634,16 +635,20 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
     switch (sim->type)
     {
         case SSAL_REALISATIONS:
-            SSAL_SimulateCRNRealisations(sim->sim,sim->model->model,alg,argc,argv);
+            rc = SSAL_SimulateCRNRealisations(sim->sim,sim->model->model,alg,argc,argv);
             break;
         case SSAL_EXPECTEDVALUE:
-            SSAL_SimulateCRNExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
+            rc = SSAL_SimulateCRNExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
             break;
         default:
             break;
     }
     /*the first pointer is a pointer to the whole array*/
-    free(argv[0]);
+    if (args != NULL)
+    {
+        free(argv[0]);
+    }
+    return rc;
 }
 
 char * SSAL_GetArg(char *key,int argc,char **argv)
