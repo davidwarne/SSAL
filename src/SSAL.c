@@ -337,24 +337,24 @@ int SSAL_WriteExpectedValueSim(FILE * stream, SSAL_ExpectedValueSimulation * sim
         return SSAL_IO_ERROR;
     }
 
-    fprintf(stream,"\"Time\"");
-    for (i=0;i<sim->NT;i++)
-    {
-        fprintf(stream,",%f",sim->T[i]);
-    }
-    fprintf(stream,"\n");
-
+    fprintf(stream,"\"T\"");
     for (j=0;j<sim->Nvar;j++)
     {
-        fprintf(stream,"\"E[%s]\"",sim->var[j]);
-        for (i=0;i<sim->NT;i++)
+        fprintf(stream,",\"E[%s(T)]\"",sim->var[j]);
+    }
+    for (j=0;j<sim->Nvar;j++)
+    {
+        fprintf(stream,",\"V[%s(T)]\"",sim->var[j]);
+    }
+    fprintf(stream,"\n");
+    for (i=0;i<sim->NT;i++)
+    {
+        fprintf(stream,"%f",sim->T[i]);
+        for (j=0;j<sim->Nvar;j++)
         {
             fprintf(stream,",%f",sim->E[j*sim->NT + i]);
         }
-        fprintf(stream,"\n");
-        
-        fprintf(stream,"\"V[%s]\"",sim->var[j]);
-        for (i=0;i<sim->NT;i++)
+        for (j=0;j<sim->Nvar;j++)
         {
             fprintf(stream,",%f",sim->V[j*sim->NT + i]);
         }
@@ -375,19 +375,19 @@ int SSAL_WriteRealisationsSim(FILE * stream, SSAL_RealisationSimulation * sim)
         return SSAL_IO_ERROR;
     }
 
-    fprintf(stream,"\"Time\"");
-    for (i = 0;i<sim->NT;i++)
+    fprintf(stream,"\"T\",\"R\"");
+    for (j=0;j<sim->Nvar;j++)
     {
-       fprintf(stream,",%f",sim->T[i]);
+        fprintf(stream,",\"%s(T)\"",sim->var[j]);
     }
     fprintf(stream,"\n");
-
+    
     for (r=0;r<sim->NR;r++)
     {
-       for (j=0;j<sim->Nvar;j++)
+        for (i = 0;i<sim->NT;i++)
         {
-            fprintf(stream,"\"%s\"",sim->var[j]);
-            for (i=0;i<sim->NT;i++)
+            fprintf(stream,"%f,%d",sim->T[i],r);
+            for (j=0;j<sim->Nvar;j++)
             {
                 fprintf(stream,",%f",sim->output[r*(sim->Nvar*sim->NT) + j*(sim->NT) + i]);
             }

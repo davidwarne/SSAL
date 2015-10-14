@@ -144,6 +144,7 @@ int main(int argc,char ** argv)
     float *c_sample; /*array to store samples*/
     int numAccept;
     float acceptRate;
+    unsigned int genData;
 
     int nsamples; /*number of samples from posterior to obtain*/
     int nMax; /*Max number of simulations runs*/
@@ -173,12 +174,18 @@ int main(int argc,char ** argv)
     
     nsamples = 10000;
     nMax = 1000000;
+    genData = 0;
     /*get input args*/
     for (i=1;i<argc;i++)
     {
+        
         if(!strcmp("-N",argv[i]))
         {
             nsamples = (int)atoi(argv[++i]);
+        }
+        else if (!strcmp("-d",argv[i]))
+        {
+            genData = 1;
         }
         else if (!strcmp("-MaxN",argv[i]))
         {
@@ -289,7 +296,11 @@ int main(int argc,char ** argv)
     simData = SSAL_CreateExpectedValueSim(&CRN,1,names,100,nt,T,&X0);
     EV_ptr = (SSAL_ExpectedValueSimulation *)(simData.sim); 
     SSAL_Simulate(&simData,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
-  
+    if (genData)
+    {
+        SSAL_WriteSimulation(stdout,simData);
+        exit(0);
+    }
     X_data = EV_ptr->E;
     for (i=0;i<nt;i++)
     {
@@ -309,6 +320,7 @@ int main(int argc,char ** argv)
     {
         fprintf(stdout,",\"c_sample%d\"",j);
     }
+    
     fprintf(stdout,"\n");
     if (numAccept != 0)
     {

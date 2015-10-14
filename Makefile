@@ -9,8 +9,12 @@ SRCDIR=src
 UTILDIR=$(SRCDIR)/sequential/util
 ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
-SRC =  $(EXPDIR)/TestABC.c  $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
+
+EXESRC = $(EXPDIR)/TestABC.c $(EXPDIR)/TestSSAL.c
+SRC = $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
 OBJS = $(SRC:.c=.o)
+EXEOBJS=$(EXESRC:.c=.o)
+EXE = $(EXESRC:.c=)
 INC = -I ./include/ 
 BIN = TestABC
 LIBS = -lm
@@ -19,12 +23,17 @@ LIBS = -lm
 
 .SUFFIXES: .c .o
 
-.c.o:
+all: $(EXE) 
+	@echo Binaries $(EXE) created!
+
+.c.o: 
 	$(CC) $(OPTS) $(PROFILE) -c $< -o $@ $(INC) 
 
-$(BIN): $(OBJS)
-	$(CC) $(OPTS) $(PROFILE)  $(OBJS) -o $(BIN) -lm 
-	@echo Binary created!!
+#$(BIN): $(OBJS)
+#	$(CC) $(OPTS) $(PROFILE)  $(OBJS) -o $(BIN) -lm 
+#	@echo Binary created!!
 
+$(EXE): $(OBJS) $(EXEOBJS)
+	$(CC) $(OPTS) -o $@  $(INC) $@.o $(OBJS) $(LIBS)
 clean:
-	set nonomatch; rm -f $(BIN) $(OBJS)
+	set nonomatch; rm -f $(EXE) $(EXEOBJS) $(OBJS)
