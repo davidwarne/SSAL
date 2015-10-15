@@ -36,6 +36,9 @@
 #define SSAL_MAX_NAME_SIZE      128
 #define SSAL_MAX_BUFFER_SIZE    1024
 
+
+
+
 /**@struct SSAL_Options_struct
  * @brief Contains user runtime configurable options
  */
@@ -140,7 +143,7 @@ struct SSAL_RealisationSimulation_struct {
     int NIC;
     /** initial conditions */
     float *IC;
-    /** number od vvariables to observe */
+    /** number of variables to observe */
     int Nvar;
     /** model variables to observe by name */
     char **var;
@@ -175,7 +178,33 @@ struct SSAL_ExpectedValueSimulation_struct {
 /** type name for  SSAL_ExpectedValueSimulation_struct*/
 typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
 
+/*macro functions*/
 
+/*converts variable name list to indexes*/
+#define SSAL_VARS2INDS(sim,model,varInd) {                  \
+    int i,j;                                                \
+    if ((sim)->Nvar == (model)->N)                          \
+    {                                                       \
+        for (j=0;j<(model)->N;j++)                          \
+        {                                                   \
+            varInd[j] = j;                                  \
+        }                                                   \
+        for (i=0;i<(sim)->Nvar;i++)                         \
+        {                                                                \
+            strncpy((sim)->var[i],(model)->names[i],SSAL_MAX_NAME_SIZE); \
+        }                                                                \
+    }                                                       \
+    for (i=0;i<(sim)->Nvar;i++)                             \
+    {                                                       \
+        for (j=0;j<(model)->N;j++)                          \
+        {                                                   \
+            if (!strcmp((sim)->var[i],(model)->names[j]))   \
+            {                                               \
+                varInd[i] = j;                              \
+            }                                               \
+        }                                                   \
+    }                                                       \
+}
 
 /* function prototypes*/
 

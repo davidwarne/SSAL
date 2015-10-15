@@ -43,14 +43,18 @@
  */
 int sumlnls(int m, int n, float T, float * restrict X0, float * restrict nu_minus,
     float * restrict nu, float * restrict c, float tau0, int M, int L, float epsilon,
-    int ndims, int * restrict dims, int (*f)(int float * float *), int * restrict nl)
+    int ndims, int * restrict dims, int (*f)(int, float *, float *), int * restrict nl)
 {
     float n_f = 0;
     float E_l[ndims];
     float E_l2[ndims];
     float taul;
     float Z_l_r[ndims];
+    float Z_lm1_r[ndims];
     float fZ_l_r[ndims];
+    float fZ_lm1_r[ndims];
+    float times[L];
+    float sigma2[L];
     int i,j,l;
     taul = tau0;
     /*time N trials of level-l and compute variances*/
@@ -62,7 +66,7 @@ int sumlnls(int m, int n, float T, float * restrict X0, float * restrict nu_minu
         {
             E_l[i] = 0;
         }
-        for (i=0;i<nt*ndims;i++)
+        for (i=0;i<ndims;i++)
         {
             E_l2[i] = 0;
         }
@@ -70,41 +74,83 @@ int sumlnls(int m, int n, float T, float * restrict X0, float * restrict nu_minu
         start_t = clock();        
         if (f == NULL) /* use E[Z(T)] instead of E[f(Z(T))]*/
         {
-            for (j=0;j<MLMC_TIMING_TRIALS;j++)
+            if (l != 0)
             {
-                satauls(m,n,1,T[NT-1],X0,nu_minus,nu,c,ndims,dims,Z_l_r,taul);
-                for (i=0;i<ndims;i++)
+                for (j=0;j<MLMC_TIMING_TRIALS;j++)
                 {
-                    E_l[i] += Z_l_r[i];
-                }
+                    sactauls(m,n,1,&T,X0,nu_minus,nu,c,ndims,dims,taul,M,Z_l_r,Z_lm1_r);
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l[i] += (Z_l_r[i] - Z_lm1_r[i]);
+                    }
 
-                for (i=0;i<ndims;i++)
-                {
-                    E_l2[i] += Z_l_r[i]*Z_l_r[i];
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l2[i] += (Z_l_r[i] - Z_lm1_r[i])*(Z_l_r[i] - Z_lm1_r[i]);
+                    }
                 }
+            }
+            else
+            {
+                for (j=0;j<MLMC_TIMING_TRIALS;j++)
+                {
+                    satauls(m,n,1,&T,X0,nu_minus,nu,c,ndims,dims,taul,Z_l_r);
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l[i] += Z_l_r[i];
+                    }
+
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l2[i] += Z_l_r[i]*Z_l_r[i];
+                    }
+                }
+ 
             }
 
         }
         else
         {
-            for (j=0;j<MLMC_TIMING_TRIALS;j++)
+            if (l != 0)
             {
-                satauls(m,n,1,T[NT-1],X0,nu_minus,nu,c,ndims,dims,Z_l_r,taul);
-                (*f)(ndims,Z_l_r,fZ_l_r);
-                for (i=0;i<ndims;i++)
+                for (j=0;j<MLMC_TIMING_TRIALS;j++)
                 {
-                    E_l[i] += fZ_l_r[i];
+                    sactauls(m,n,1,&T,X0,nu_minus,nu,c,ndims,dims,taul,M,Z_l_r,Z_lm1_r);
+                    (*f)(ndims,Z_l_r,fZ_l_r);
+                    (*f)(ndims,Z_lm1_r,fZ_lm1_r);
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l[i] += (fZ_l_r[i] - fZ_lm1_r[i]);
+                    }
+
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l2[i] += (fZ_l_r[i] - fZ_lm1_r[i])*(fZ_l_r[i] - fZ_lm1_r[i]);
+                    }
                 }
 
-                for (i=0;i<ndims;i++)
+            }
+            else
+            {
+                for (j=0;j<MLMC_TIMING_TRIALS;j++)
                 {
-                    E_l2[i] += fZ_l_r[i]*fZ_l_r[i];
+                    satauls(m,n,1,&T,X0,nu_minus,nu,c,ndims,dims,taul,Z_l_r);
+                    (*f)(ndims,Z_l_r,fZ_l_r);
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l[i] += fZ_l_r[i];
+                    }
+
+                    for (i=0;i<ndims;i++)
+                    {
+                        E_l2[i] += fZ_l_r[i]*fZ_l_r[i];
+                    }
                 }
             }
         }
         /*not the best of timers, but should be sufficient*/
         times[l] = (float)(clock() - start_t)/((float)CLOCKS_PER_SEC); 
-        
+        times[l] /= (float)MLMC_TIMING_TRIALS;        
         /*compute marginal sample sigma^2*/
         for (i=0;i<ndims;i++)
         {
@@ -116,7 +162,7 @@ int sumlnls(int m, int n, float T, float * restrict X0, float * restrict nu_minu
         }
         for (i=0;i<ndims;i++)
         {
-            E_l2[i] -= E_l[i];
+            E_l2[i] -= E_l[i]*E_l[i];
         }
         /*the sigma^2 we use is the dim with max sigma^2*/
         sigma2[l] = E_l2[0];
@@ -148,7 +194,8 @@ int sumlnls(int m, int n, float T, float * restrict X0, float * restrict nu_minu
 
     for (l=0;l<L;l++)
     {
-        nl[l] = (int)ceilf(n_f*sqrtf(sigma2[l]/times[l])/(epsilon*epsilon));
+        nl[l] = (int)ceilf(n_f*(sqrtf(sigma2[l])/sqrtf(times[l]))/(epsilon*epsilon));
     }
+
     return 0;
 }

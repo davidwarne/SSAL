@@ -462,15 +462,11 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
     for (i=0;i<newRS->Nvar;i++)
     {
         int j;
-        for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
+        if (obs != NULL)
         {
-            newRS->var[i][j] = obs[i][j];
-            if (obs[i][j] == '\0');
-            {
-                continue;
-            }
+            strncpy(newRS->var[i],obs[i],SSAL_MAX_NAME_SIZE);
+            newRS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
         }
-        newRS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
     }
 
 
@@ -548,15 +544,11 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
     for (i=0;i<newEVS->Nvar;i++)
     {
         int j;
-        for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
+        if (obs != NULL)
         {
-            newEVS->var[i][j] = obs[i][j];
-            if (obs[i][j] == '\0');
-            {
-                continue;
-            }
+            strncpy(newEVS->var[i],obs[i],SSAL_MAX_NAME_SIZE);
+            newEVS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
         }
-        newEVS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
     }
 
 
@@ -682,16 +674,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     float * X_rj;
     int varInd[sim->Nvar];
 
-    for (i=0;i<sim->Nvar;i++)
-    {
-        for (j=0;j<model->N;j++)
-        {
-            if (!strcmp(sim->var[i],model->names[j]))
-            {
-                varInd[i] = j;
-            }
-        }
-    }
+    SSAL_VARS2INDS(sim,model,varInd)
 
     for (i=0;i<model->N*model->M;i++)
     {
@@ -746,20 +729,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     int var[sim->Nvar];
     float nu[model->N*model->M];
     float * X_r;
-    double * E_X;
-    double * V_X;
+    float * E_X;
+    float * V_X;
     int varInd[sim->Nvar];
 
-    for (i=0;i<sim->Nvar;i++)
-    {
-        for (j=0;j<model->N;j++)
-        {
-            if (!strcmp(sim->var[i],model->names[j]))
-            {
-                varInd[i] = j;
-            }
-        }
-    }
+    SSAL_VARS2INDS(sim,model,varInd)
 
     for (i=0;i<model->N*model->M;i++)
     {
@@ -767,8 +741,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     }
 
     X_r = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
-    E_X = (double *)malloc(sim->NT*sim->Nvar*sizeof(double));
-    V_X = (double *)malloc(sim->NT*sim->Nvar*sizeof(double));
+    E_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
+    V_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
     for (i=0;i<sim->Nvar*sim->NT;i++)
     {
         E_X[i] = 0;
@@ -786,8 +760,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
              * when a large number of realisations are used*/                
             for (j=0;j<sim->NR;j++)
             {
-                segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,varInd,X_r);
+                segils(model->M,model->N,sim->NT,sim->T,sim->IC,
+                    model->nu_minus,nu,model->c,sim->Nvar,varInd,X_r);
                 
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
@@ -798,6 +772,28 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
                     V_X[i] += X_r[i]*X_r[i];
                 }
             }
+
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                E_X[i] /= (float)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (float)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] -= E_X[i]*E_X[i];
+            }
+        
+            /*convert variance in X to variance in the mean esitmator
+             * i.e., Var[E[X(T)]] = Var[X]/n
+             */
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (float)(sim->NR);
+            }
+
         }
             break;
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
@@ -807,8 +803,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             
             for (j=0;j<sim->NR;j++)
             {
-                satauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,varInd,tau,X_r);
+                satauls(model->M,model->N,sim->NT,sim->T,sim->IC,
+                    model->nu_minus,nu,model->c,sim->Nvar,varInd,tau,X_r);
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
                     E_X[i] += (double)X_r[i];
@@ -818,41 +814,52 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
                     V_X[i] +=(double)( X_r[i]*X_r[i]);
                 }
             }
+
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                E_X[i] /= (float)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (float)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] -= E_X[i]*E_X[i];
+            }
+        
+            /*convert variance in X to variance in the mean esitmator
+             * i.e., Var[E[X(T)]] = Var[X]/n
+             */
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (float)(sim->NR);
+            }
+
+
         }
             break;
         case SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL:
         {
+            float tau0, eps;
+            int M, L;
+            tau0 = (float)atof(SSAL_GetArg("--tau0",argc,argv));
+            M = (int)atoi(SSAL_GetArg("--M",argc,argv));
+            L = (int)atoi(SSAL_GetArg("--L",argc,argv));
+            eps = (float)atof(SSAL_GetArg("--eps",argc,argv));
+            samlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                nu,model->c,tau0,M,L,eps,sim->Nvar,varInd,NULL,E_X,V_X);
         }
             break;
         default:
             break;
     }
 
+    
     for (i=0;i<sim->Nvar*sim->NT;i++)
     {
-        E_X[i] /= (double)(sim->NR);
-    }
-    for (i=0;i<sim->Nvar*sim->NT;i++)
-    {
-        V_X[i] /= (double)(sim->NR);
-    }
-    for (i=0;i<sim->Nvar*sim->NT;i++)
-    {
-        V_X[i] -= E_X[i]*E_X[i];
-    }
-
-    /*convert variance in X to variance in the mean esitmator
-     * i.e., Var[E[X(T)]] = Var[X]/n
-     */
-    for (i=0;i<sim->Nvar*sim->NT;i++)
-    {
-        V_X[i] /= (double)(sim->NR);
-    }
-
-    for (i=0;i<sim->Nvar*sim->NT;i++)
-    {
-        sim->E[i] =  (float)E_X[i];
-        sim->V[i] =  (float)V_X[i];
+        sim->E[i] =  E_X[i];
+        sim->V[i] =  V_X[i];
     }
 }
  

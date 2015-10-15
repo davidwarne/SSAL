@@ -54,12 +54,13 @@ int sactauls(int m, int n, int nt, float * restrict T, float * restrict X0,
     /*poisson variates*/
     float Y[3][m];
     float t = 0;
-    int ti,i,j,ki,r;
+    int ti,i,j,k,r;
    
     float tau_l;
+    float tau_lm1;
 
-    tau_l = tau/((float)M);
-    
+    tau_l = tau;
+    tau_lm1 = tau*M;
     /*initial conditions*/
     for (i=0;i<n;i++)
     {
@@ -74,34 +75,37 @@ int sactauls(int m, int n, int nt, float * restrict T, float * restrict X0,
 
     for (ti=0;ti<nt;ti++)
     {
-        for (;t<=T[ti];t+=tau)
+        for (;t<=T[ti];t+=tau_lm1)
         {
             /*compute coarse propensities*/
-            suhzds(m,n,nu_minus,Z_c,a_c);
+            suhzds(m,n,nu_minus,c,Z_c,a_c);
             
             for (k=0;k<M;k++)
             {
                 /*compute fine propensities*/
-                suhzds(m,n,nu_minus,Z_f,a_f);
+                suhzds(m,n,nu_minus,c,Z_f,a_f);
                 /*update virtual propensities*/
                 for (j=0;j<m;j++)
                 {
-                    b[1][j] = (a_c[j] < a_f[j]) ? a_c[j] : a_f[j];
-                }
-
-                for (j=0;j<m;j++)
-                {
-                    b[2][j] = a_c[j] - b_1[j];
+                    b[0][j] = (a_c[j] < a_f[j]) ? a_c[j] : a_f[j];
                 }
                 for (j=0;j<m;j++)
                 {
-                    b[3][j] = a_f[j] - b_1[j];
+                    b[1][j] = a_c[j] - b[0][j];
+                }
+                for (j=0;j<m;j++)
+                {
+                    b[2][j] = a_f[j] - b[0][j];
                 }
                 /*generate poisson variates for each virtual reaction channel*/
                 for (r=0;r<3;r++)
                 {
-                    Y[r][j] = (b[r][j] == 0) ? 0 : (float)surngpois(b[r][j]*tau_l);
+                    for (j=0;j<m;j++)
+                    {
+                        Y[r][j] = (b[r][j] <= 0) ? 0 : (float)surngpois(b[r][j]*tau_l);
+                    }
                 }
+
 
                 /*update coarse and fine state vectors*/
                 /*note Po(a_c*tau_l) = Po(b_1*tau_l) + Po(b_2*tau_l)*/
@@ -109,7 +113,7 @@ int sactauls(int m, int n, int nt, float * restrict T, float * restrict X0,
                 {
                     for (i=0;i<n;i++)
                     {
-                        Z_c[i] += (Y[1][j] + Y[2][j])*nu[j*n+i];
+                        Z_c[i] += (Y[0][j] + Y[1][j])*nu[j*n+i];
                     }
                 }
                 
@@ -118,7 +122,7 @@ int sactauls(int m, int n, int nt, float * restrict T, float * restrict X0,
                 {
                     for (i=0;i<n;i++)
                     {
-                        Z_f[i] += (Y[1][j] + Y[3][j])*nu[j*n+i];
+                        Z_f[i] += (Y[0][j] + Y[2][j])*nu[j*n+i];
                     }
                 }
 

@@ -37,12 +37,22 @@ int main(int argc , char ** argv)
     int NR; /*number of realisations*/
     float dt;
     float *T;
+    float *X0;
     int model;
+    int type;
     char opts[256];
+    int m,n;
+
+    /*tau-leap args*/
+    float tau;
+    /*Multi-level args*/
+    int M,L;
+    float tau0,eps;
+
     SSAL_AlgorithmType algType;
     SSAL_Model CRN;
     SSAL_Simulation sim;
-
+    type = 0;
     NT = 0;    
     NR = 1;
     model = 3;
@@ -74,20 +84,46 @@ int main(int argc , char ** argv)
         {
             model = (int)atoi(argv[++i]);
         }
+        else if (!strcmp("-st",argv[i]))
+        {
+            type = (int)atoi(argv[++i]);
+        }
         else if (!strcmp("-T",argv[i]))
         {
             algType = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;
-            sprintf(opts,"--tau %s\n",argv[++i]);
+            tau = (float)atof(argv[++i]);
+        }
+        else if(!strcmp("-L",argv[i]))
+        {
+            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
+            L = (int)atoi(argv[++i]);
+        }
+        else if(!strcmp("-M",argv[i]))
+        {
+            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
+            M = (int)atoi(argv[++i]);
+        }
+        else if(!strcmp("-T0",argv[i]))
+        {
+            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
+            tau0 = (float)atof(argv[++i]);
+        }
+        else if(!strcmp("-eps",argv[i]))
+        {
+            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
+            eps = (float)atof(argv[++i]);
         }
         else if (!strcmp("-h",argv[i]))
         {
-            fprintf(stderr,"Usage: %s [-n numRealisations] -nt numTimePoints -t endTime [-m model] [-T tau]\n");
+            fprintf(stderr,"Usage: %s [-n numRealisations] -nt numTimePoints -t endTime [-m model] [-st simType] [-T tau]\n");
             fprintf(stderr,"\tmodel = 1) Degradation\n");
             fprintf(stderr,"\t        2) Production/Degradation\n");
             fprintf(stderr,"\t        3) Dimerisation Model I (default)\n");
             fprintf(stderr,"\t        4) Schlogl System\n");
             fprintf(stderr,"\t        5) Schnakenberg System\n");
             fprintf(stderr,"\t        6) Dimerisation Model II\n");
+            fprintf(stderr,"\tsimType = 1) Realisations\n");
+            fprintf(stderr,"\t          2) Expected Values\n");
             exit(0);
         }
     }
@@ -98,6 +134,8 @@ int main(int argc , char ** argv)
         T[i] = dt*((float)(i+1));
     }
 
+    
+
     /*init SSAL */
     SSAL_Initialise(argc,argv);
     /*select model*/
@@ -106,136 +144,146 @@ int main(int argc , char ** argv)
         default:
         case 1:
         {
-            int m,n;
             m = 1;
             n = 1;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 float nu_minus[1] = {1};
                 float nu_plus[1] = {0};
                 float c[1] = {0.1};
                 char *names[1] = {"A"};
-                float X0[1] = {20};
+                X0[0] = 20;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
             }
         }
             break;
         case 2:
         {
-            int m,n;
             m = 2;
             n = 1;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 float nu_minus[2] = {1,0};
                 float nu_plus[2] = {0,1};
                 float c[2] = {0.1,1.0};
                 char *names[1] = {"A"};
-                float X0[1] = {0};
+                X0[0] = 0;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
             }
         }
-
             break;
         case 3:
         {
-            int n,m;
             m = 5;
             n = 3;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 /*this is just the Dimerisation problem*/
                 float nu_minus[15] = {0,0,0,1,0,0,0,2,0,1,0,0,0,1,0};
                 float nu_plus[15] = {1,0,0,1,1,0,0,0,1,0,0,0,0,0,0};
                 float c[5] = {25,1000,0.001,0.1,1};
                 char *names[3] = {"M","P","D"};
-                float X0[3] = {0,0,0};
+                X0[0] = 0;
+                X0[1] = 0;
+                X0[2] = 0;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
             }
         }
             break;
         case 4:
         {
-            int m,n;
             m = 4;
             n = 1;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 float nu_minus[4] = {2,3,0,1};
                 float nu_plus[4] = {3,2,1,0};
                 float c[4] = {0.18,0.00025,2200,37.5};
                 char *names[1] = {"A"};
-                float X0[1] = {0};
+                X0[0] = 0;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
             }
         }
-
             break;
         case 5:
         {
-            int m,n;
             m = 4;
             n = 2;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 float nu_minus[8] = {2,1,0,0,1,0,0,0};
                 float nu_plus[8] = {3,0,1,0,0,0,0,1};
                 float c[4] = {0.00004,50,10,25};
                 char *names[2] ={"A","B"};
-                float X0[2] = {10,10};
+                X0[0] = 10;
+                X0[1] = 10;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
             }
         }
-        
-
             break;
         case 6:
         {
-            int m,n;
             m = 4;
             n = 3;
+            X0 = (float *)malloc(n*sizeof(float));
             {
                 float nu_minus[12] = {1,0,0,0,1,0,2,0,0,0,1,0};
                 float nu_plus[12] = {0,0,0,0,0,1,0,1,0,2,0,0};
                 float c[4] = {1,0.04,0.002,0.5};
                 char *names[3] = {"S1","S2","S3"};
-                float X0[3] = {100000,0,0};
+                X0[0] = 100000;
+                X0[1] = 0;
+                X0[2] = 0;
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
-                /* build realisation simulation */
-                sim = SSAL_CreateRealisationsSim(
-                    &CRN,n,names,NR,NT,T,X0);
-                //sim = SSAL_CreateExpectedValueSim(
-                //    &CRN,n,names,NR,NT,T,X0);
             }
         }
-       
             break;
     }
 
-    /*write the CRN*/
-    //SSAL_WriteChemicalReactionNetwork(stdout,*((SSAL_ChemicalReactionNetwork *)(CRN.model)));
+    
+    /* build realisation simulation */
+    switch (type)
+    {
+        default:
+        case 1:
+        {
+            char *obs[1] = {"D"};
+            sim = SSAL_CreateRealisationsSim(&CRN,1,obs,NR,NT,T,X0);
+        }
+            break;
+        case 2:
+        {
+            char *obs[1] = {"D"};
+            sim = SSAL_CreateExpectedValueSim(&CRN,1,obs,NR,NT,T,X0);
+        }
+            break;
+    }
+  
+    switch (algType)
+    {
+        default:
+        case SSAL_ESSA_GILLESPIE_SEQUENTIAL:
+            opts[0] = '\0';
+            break;
+        case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
+            sprintf(opts,"--tau %f",tau);
+            break;
+        case SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL:
+            sprintf(opts,"--tau0 %f --L %d --M %d --eps %f",tau0,L,M,eps);
+            break;
+    }
     /*simulate realisations*/
     SSAL_Simulate(&sim,algType,opts);
     /*write the data*/
