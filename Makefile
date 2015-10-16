@@ -1,8 +1,8 @@
 #!/bin/make
 
 CC = gcc
-#OPTS = -O2 -std=gnu99 -D__SERIAL__ 
-OPTS = -g   -D__SERIAL__ 
+OPTS = -O2 -std=gnu99 -D__SERIAL__ 
+#OPTS = -g   -D__SERIAL__ 
 #OPTS = -g
 EXPDIR=examples
 SRCDIR=src

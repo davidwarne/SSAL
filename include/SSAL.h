@@ -180,6 +180,7 @@ typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
 
 /*macro functions*/
 
+
 /*converts variable name list to indexes*/
 #define SSAL_VARS2INDS(sim,model,varInd) {                  \
     int i,j;                                                \
