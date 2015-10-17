@@ -161,7 +161,7 @@ int WriteData(FILE *stream, int M,int numAccept,float epsilon, float *rhoV,int m
     float acceptRate,float * theta_r, float *theta_s)
 {
     static unsigned char header = 1;
-
+    int i,j;
     /*output to file*/
     if (header == 1)
     {
@@ -170,7 +170,7 @@ int WriteData(FILE *stream, int M,int numAccept,float epsilon, float *rhoV,int m
         {
             fprintf(stream,",\"theta_r%d\"",j);
         }
-        fprintf(",\"rho\"");
+        fprintf(stream,",\"rho\"");
         for (j=0;j<M;j++)
         {
             fprintf(stream,",\"theta_s%d\"",j);
@@ -213,12 +213,16 @@ int main(int argc,char ** argv)
     int M; /*number of parameters specified*/
     float *X0; /*initial condition*/
     int N; /*size of state space*/
+    float *nu_minus;
+    float *nu_plus;
     float *a,*b; /*intervals of prior distributions*/
     float *c_real; /*rate parameters used to generate data*/
     float *X_data;
     char **names; /*species symbol names*/
     int i,j; /*loop counters*/
-
+    
+    SSAL_AlgorithmType alg;
+    char args[SSAL_MAX_BUFFER_SIZE];
     SSAL_Model CRN; /*Chemical reaction model*/
     SSAL_ChemicalReactionNetwork *CRN_ptr;
     SSAL_ExpectedValueSimulation *EV_ptr;
@@ -254,7 +258,7 @@ int main(int argc,char ** argv)
         {
             nt = (int)atoi(argv[++i]);
             T = (float *)malloc(nt*sizeof(float));
-            for (j=0;j<NT;j++)
+            for (j=0;j<nt;j++)
             {
                 T[j] = (float)atof(argv[++i]);
             }
@@ -298,6 +302,22 @@ int main(int argc,char ** argv)
                 b[j] = (float)atof(argv[++i]);
             }
         }
+        else if (!strcmp("-alg",argv[i]))
+        {
+            int temp;
+            temp = (int)atoi(argv[++i]);
+            switch (temp)
+            {
+                case 1:
+                    alg = SSAL_ESSA_GILLESPIE_SEQUENTIAL;
+                    args[0] = '\0';
+                    break;
+                case 2:
+                    alg = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;
+                    sprintf(args,"--tau %s",argv[++i]);
+                    break;
+            }
+        }
         else
         {
             fprintf(stdout,"Usage: %s -N numAccepts -MaxN maxTrials -m modelID M c1,...,cM -t NT t1,..,tNT -X0 N X_1(0),...,X_N(0)  -e epsilon -a a1,...,aM -b b1,...bM -T tau\n",argv[0]);
@@ -310,57 +330,47 @@ int main(int argc,char ** argv)
     nu_minus = (float *)malloc(N*M*sizeof(float));
     nu_plus = (float *)malloc(N*M*sizeof(float));
 
-    for (i=0;i<N*N:i++)
+    for (i=0;i<N*N;i++)
     {
-        nu_minus[i] = 0;; 
+        nu_minus[i] = 0;
     }
-    for (i=0;i<N*N:i++)
+    for (i=0;i<N*N;i++)
     {
-        nu_plus[i] = 0;; 
+        nu_plus[i] = 0;
     }
 
+    for (i=0;i<N;i++)
+    {
+        names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
+        sprintf(names[i],"X_%d",i);
+    }
     /*init SSAL*/
     SSAL_Initialise(argc,argv);
 
     switch(model)
     {
         case 1: /*simple degradation*/
-            names[0] = "A";
             nu_minus[0] = 1;
             break;
         case 2: /*production/degradation*/ 
             /*note: this is actually redundant with the monomolecular chain*/
-            names[0] = "A";
             nu_minus[0] = 1; /*A --> 0*/
             nu_plus[1] = 1; /*0 --> A*/
             break;
         case 3: /*monomolecular chain 0 --> X_1 --> ... X_i-1 --> X_i --> ... X_N --> 0*/
-            for (i=0;i<N;i++)
-            {
-                names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
-                sprintf(names[i],"X_%d",i);
-            }
-
-            
             nu_plus[0] = 1; /*0 --> X_1*/
-            for (i=1;i<(N-1);i++)
+            for (i=1;i<N;i++)
             {
                 nu_minus[i*N + (i -1)] = 1;       
                 nu_plus[i*N + i] = 1;   /*X_{i-1} --> X_{i}, i = 2,..,N-1*/ 
             }
-            nu_minus[N*N - 1] = 1; /*X_N --> 0*/
+            nu_minus[(N+1)*N - 1] = 1; /*X_N --> 0*/
             break;
         case 4: /*random monomolecular reaction network*/
             /* conversion: X_i --> X_j i != j
              * production: 0 --> X_i
              * degradation: X_i --> 0
              */
-            for (i=0;i<N;i++)
-            {
-                names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
-                sprintf(names[i],"X_%d",i);
-            }
-            
             for (j=0;j<M;j++)
             {
                 if (rand() > (RAND_MAX >> 2)) /*add conversion reaction*/
@@ -404,14 +414,15 @@ int main(int argc,char ** argv)
     c_sample = (float *)malloc(nsamples*CRN_ptr->M*sizeof(float));
      
     
-    sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,&X0);
+    sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,X0);
 
     /*generate dummy data as an example*/
-    simData = SSAL_CreateExpectedValueSim(&CRN,1,names,100,nt,T,&X0);
+    simData = SSAL_CreateExpectedValueSim(&CRN,N,names,100,nt,T,X0);
     EV_ptr = (SSAL_ExpectedValueSimulation *)(simData.sim); 
     SSAL_Simulate(&simData,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
     if (genData)
     {
+        SSAL_WriteChemicalReactionNetwork(stderr,*CRN_ptr);
         SSAL_WriteSimulation(stdout,simData);
         exit(0);
     }
@@ -423,7 +434,7 @@ int main(int argc,char ** argv)
     }
 
     /*apply ABC rejection method*/
-    ABCrejection(&sim,nMax,nsamples, X_data,CRN_ptr->M, a, b, rho, 
+    ABCrejection(&sim,alg,args,nMax,nsamples, X_data,CRN_ptr->M, a, b, rho, 
             epsilon,c_sample, rhoV, &numAccept, &acceptRate);
     
     /*write results*/
