@@ -347,6 +347,18 @@ int SSAL_WriteExpectedValueSim(FILE * stream, SSAL_ExpectedValueSimulation * sim
         fprintf(stream,",\"V[%s(T)]\"",sim->var[j]);
     }
     fprintf(stream,"\n");
+    /*print initial conditions*/
+    fprintf(stream,"%f",0.0);
+    for (j=0;j<sim->Nvar;j++)
+    {
+        fprintf(stream,",%f",sim->IC[sim->varInd[j]]); 
+    }
+    for (j=0;j<sim->Nvar;j++)
+    {
+       fprintf(stream,",%f",0.0); 
+    }
+    fprintf(stream,"\n");
+
     for (i=0;i<sim->NT;i++)
     {
         fprintf(stream,"%f",sim->T[i]);
@@ -384,6 +396,13 @@ int SSAL_WriteRealisationsSim(FILE * stream, SSAL_RealisationSimulation * sim)
     
     for (r=0;r<sim->NR;r++)
     {
+        /*print initial conditions*/
+        fprintf(stream,"%f,%d",0.0,r);
+        for (j=0;j<sim->Nvar;j++)
+        {
+            fprintf(stream,",%f",sim->IC[sim->varInd[j]]); 
+        }
+        fprintf(stream,"\n");
         for (i = 0;i<sim->NT;i++)
         {
             fprintf(stream,"%f,%d",sim->T[i],r);
@@ -450,9 +469,10 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
     {
         newRS->var[i] = obsArray + i*SSAL_MAX_NAME_SIZE;
     }
-
-    /*data is always un-allocated first as it is model dependent*/
-    newRS->output = NULL;
+    if((newRS->varInd = (int *)malloc(N*sizeof(int)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
 
     /*copy data */
     for (i=0;i<newRS->NT;i++)
@@ -467,8 +487,7 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             strncpy(newRS->var[i],obs[i],SSAL_MAX_NAME_SIZE);
             newRS->var[i][SSAL_MAX_NAME_SIZE-1] = '\0';
         }
-    }
-
+    } 
 
     /*setting initial condition sizes are dependent on the model*/
     switch (model->type)
@@ -477,7 +496,7 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
         {
             SSAL_ChemicalReactionNetwork *CRN;
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
-            
+            SSAL_VARS2INDS(newRS,CRN,newRS->varInd)        
             /*initial conditions will be the initial chemical species copy numbers*/
             newRS->IC = (float *)malloc((newRS->Nvar)*(CRN->N)*sizeof(float));
             for (i=0; i<(newRS->Nvar)*(CRN->N); i++)
@@ -512,6 +531,8 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
 {
     int i;
     char * obsArray;
+    char * funcname;
+    funcname = "SSAL_CreateExpectedValueSim";
     SSAL_Simulation newSim;
     SSAL_ExpectedValueSimulation *newEVS;
     newSim.type = SSAL_EXPECTEDVALUE;
@@ -533,6 +554,10 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
         newEVS->var[i] = obsArray + i*SSAL_MAX_NAME_SIZE;
     }
 
+    if((newEVS->varInd = (int *)malloc(N*sizeof(int)))==NULL)
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     /*data is always un-allocated first as it is model dependent*/
     newEVS->E = NULL;
     newEVS->V = NULL;
@@ -559,7 +584,7 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
         {
             SSAL_ChemicalReactionNetwork *CRN;
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
-            
+            SSAL_VARS2INDS(newEVS,CRN,newEVS->varInd) 
             /*initial conditions will be the initial chemical species copy numbers*/
             newEVS->IC = (float *)malloc((newEVS->Nvar)*(CRN->N)*sizeof(float));
             for (i=0; i<(newEVS->Nvar)*(CRN->N); i++)
@@ -668,13 +693,8 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
 {
     int j,i;
-    int nvar;
-    int var[sim->Nvar];
     float nu[model->N*model->M];
     float * X_rj;
-    int varInd[sim->Nvar];
-
-    SSAL_VARS2INDS(sim,model,varInd)
 
     for (i=0;i<model->N*model->M;i++)
     {
@@ -691,7 +711,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,varInd,X_rj+j*(sim->NT*sim->Nvar));
+                    nu,model->c,sim->Nvar,sim->varInd,X_rj+j*(sim->NT*sim->Nvar));
             }
         }
             break;
@@ -703,7 +723,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
                 satauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
+                    nu,model->c,sim->Nvar,sim->varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
             }
         }
             break;
@@ -725,15 +745,10 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
 {
     int j,i;
-    int nvar;
-    int var[sim->Nvar];
     float nu[model->N*model->M];
     float * X_r;
     float * E_X;
     float * V_X;
-    int varInd[sim->Nvar];
-
-    SSAL_VARS2INDS(sim,model,varInd)
 
     for (i=0;i<model->N*model->M;i++)
     {
@@ -761,7 +776,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,
-                    model->nu_minus,nu,model->c,sim->Nvar,varInd,X_r);
+                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,X_r);
                 
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
@@ -804,7 +819,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
                 satauls(model->M,model->N,sim->NT,sim->T,sim->IC,
-                    model->nu_minus,nu,model->c,sim->Nvar,varInd,tau,X_r);
+                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,tau,X_r);
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
                     E_X[i] += (double)X_r[i];
@@ -848,7 +863,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             L = (int)atoi(SSAL_GetArg("--L",argc,argv));
             eps = (float)atof(SSAL_GetArg("--eps",argc,argv));
             samlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                nu,model->c,tau0,M,L,eps,sim->Nvar,varInd,NULL,E_X,V_X);
+                nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
         }
             break;
         default:

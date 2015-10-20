@@ -35,27 +35,70 @@
  * X is the measured dataset.
  *
  * @param n dimensionality of data
+ * @param nt number of time points
  * @param X dataset 
  * @param X_star simulated data
  */
-float rho(int n, float *X, float *X_star)
+float rho(int n, int nt, float *X, float *X_star)
 {
     int i;
     float d,sum; 
     sum = 0;
 
-    for (i=0;i<n;i++)
+    for (i=0;i<n*nt;i++)
     {
         sum += (X[i] - X_star[i])*(X[i]-X_star[i]);
     }
 
     d = sum;
     sum = 0;
-    for (i=0;i<n;i++)
+    for (i=0;i<n*nt;i++)
     {
         sum += X[i]*X[i];   
     }
     return (sum != 0) ? d/sum : d;
+}
+
+/**
+ * @brief A more appropirate distance measure 
+ * @details (I think...) We scale each time point by the
+ * norm of the data.
+ *
+ * @param n state space dimensionality
+ * @param nt number of time points
+ * @param X dataset
+ * @param X_start simulation data
+ */
+float rho2(int n, int nt, float * X, float *X_star)
+{
+    int i,t;
+    float X_norm, X_star_norm;
+    float d;
+    d = 0;
+    for (t=0;t<nt;t++)
+    {
+        X_norm = 0;
+        X_star_norm = 0;
+        for (i=0;i<n;i++)
+        {
+            X_norm += X[i*nt + t]*X[i*nt + t];
+        }
+        for (i=0;i<n;i++)
+        {
+            X_star_norm += X_star[i*nt + t]*X_star[i*nt + t];
+        }
+        
+        if (X_norm != 0)
+        {
+            d += (1 - X_star_norm/X_norm)*(1 - X_star_norm/X_norm);
+        }
+        else
+        {
+            d += X_star_norm*X_star_norm;
+        }
+    }
+
+    return d;
 }
 
 /**
@@ -83,7 +126,7 @@ float rho(int n, float *X, float *X_star)
  *
  */
 int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int max_n, 
-    int nacc, float *data, int m,float *a, float *b, float (*rho)(int, float *, float *),
+    int nacc, float *data, int m,float *a, float *b, float (*rho)(int, int, float *, float *),
     float eps, float * theta, float *rhoVals, int *numAccept, float *acceptRate)
 {
     int i,j,k;
@@ -109,7 +152,7 @@ int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int m
         SSAL_Simulate(sim,alg,args);
 
         /*accept/reject*/
-        d = (*rho)((RS_ptr->Nvar)*(RS_ptr->NT),data,X_r);
+        d = (*rho)((RS_ptr->Nvar),(RS_ptr->NT),data,X_r);
         if (d <= eps*eps)
         {
             rhoVals[k] = d;
@@ -234,6 +277,9 @@ int main(int argc,char ** argv)
     t_end = 30.0;
     model = 1;
     M = 1;
+    N = 1;
+    alg = SSAL_ESSA_GILLESPIE_SEQUENTIAL;
+    args[0] =  '\0';
     
     nsamples = 10000;
     nMax = 1000000;
@@ -258,9 +304,11 @@ int main(int argc,char ** argv)
         {
             nt = (int)atoi(argv[++i]);
             T = (float *)malloc(nt*sizeof(float));
-            for (j=0;j<nt;j++)
+            T[nt - 1] = (float)atof(argv[++i]);
+
+            for (j=0;j<(nt-1);j++)
             {
-                T[j] = (float)atof(argv[++i]);
+                T[j] = (j+1)*(T[nt-1]/((float)nt));
             }
         }
         else if (!strcmp("-m",argv[i]))
@@ -414,7 +462,7 @@ int main(int argc,char ** argv)
     c_sample = (float *)malloc(nsamples*CRN_ptr->M*sizeof(float));
      
     
-    sim = SSAL_CreateRealisationsSim(&CRN,1,names,1,nt,T,X0);
+    sim = SSAL_CreateRealisationsSim(&CRN,N,names,1,nt,T,X0);
 
     /*generate dummy data as an example*/
     simData = SSAL_CreateExpectedValueSim(&CRN,N,names,100,nt,T,X0);
@@ -434,7 +482,7 @@ int main(int argc,char ** argv)
     }
 
     /*apply ABC rejection method*/
-    ABCrejection(&sim,alg,args,nMax,nsamples, X_data,CRN_ptr->M, a, b, rho, 
+    ABCrejection(&sim,alg,args,nMax,nsamples, X_data,CRN_ptr->M, a, b, rho2, 
             epsilon,c_sample, rhoV, &numAccept, &acceptRate);
     
     /*write results*/

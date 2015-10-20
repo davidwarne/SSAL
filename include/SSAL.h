@@ -147,6 +147,7 @@ struct SSAL_RealisationSimulation_struct {
     int Nvar;
     /** model variables to observe by name */
     char **var;
+    int *varInd;
     /** output data*/
     float *output;
 };
@@ -171,6 +172,7 @@ struct SSAL_ExpectedValueSimulation_struct {
     int Nvar;
     /** model variables to observe by name */
     char **var;
+    int *varInd;
     /** output data*/
     float *E;
     float *V;
