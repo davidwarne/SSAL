@@ -2,6 +2,9 @@
 
 CC = gcc
 OPTS = -O2 -std=gnu99 -D__SERIAL__ 
+#OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
+
+NAME = ssal
 #OPTS = -g   -D__SERIAL__ 
 #OPTS = -g
 EXPDIR=examples
@@ -16,8 +19,12 @@ OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)
 INC = -I ./include/ 
-BIN = TestABC
 LIBS = -lm
+
+LIBDIR = lib
+STATIC = $(LIBDIR)/lib$(NAME).a
+AR = ar
+AROPTS = -rcvs
 #PROFILE = -g -pg
 
 
@@ -29,11 +36,13 @@ all: $(EXE)
 .c.o: 
 	$(CC) $(OPTS) $(PROFILE) -c $< -o $@ $(INC) 
 
+$(STATIC): $(OBJS)
+	$(AR) $(AROPTS) $(STATIC) $(OBJS)
 #$(BIN): $(OBJS)
 #	$(CC) $(OPTS) $(PROFILE)  $(OBJS) -o $(BIN) -lm 
 #	@echo Binary created!!
 
-$(EXE): $(OBJS) $(EXEOBJS)
-	$(CC) $(OPTS) -o $@  $(INC) $@.o $(OBJS) $(LIBS)
+$(EXE): $(EXEOBJS) $(STATIC) 
+	$(CC) $(OPTS) -o $@  $(INC) $@.o  $(STATIC)  $(LIBS)
 clean:
-	set nonomatch; rm -f $(EXE) $(EXEOBJS) $(OBJS)
+	set nonomatch; rm -f $(EXE) $(EXEOBJS) $(OBJS) $(STATIC)

@@ -169,10 +169,6 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
             {
                 V_X[i] += E_l2[i]/((float)nl[l]);
             }
-            for (i=0;i<nt*ndims;i++)
-            {
-                printf("%f %f\n",E_l[i],E_X[i]);
-            }
             taul /= (float)M;
         }
 

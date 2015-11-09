@@ -156,6 +156,22 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
@@ -173,6 +189,22 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
@@ -193,6 +225,22 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
@@ -210,6 +258,22 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
@@ -228,6 +292,22 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
@@ -247,30 +327,63 @@ int main(int argc , char ** argv)
                 /* build chemical reaction network*/
                 CRN = SSAL_CreateChemicalReactionNetwork(
                     names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
+            }
+        }
+            break;
+        case 7: 
+        {
+            m = 3;
+            n = 4;
+            X0 = (float *)malloc(n*sizeof(float));
+            {
+                float nu_minus[12] = {1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0};
+                float nu_plus[12] = { 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1};
+                float c[3] = {1.0,1.0,0.1};
+                char *names[4] = {"S","E","ES","P"};
+                X0[0] = 100;
+                X0[1] = 1000;
+                X0[2] = 0;
+                X0[3] = 0;
+                /* build chemical reaction network*/
+                CRN = SSAL_CreateChemicalReactionNetwork(
+                    names,m,n,nu_minus,nu_plus,c);
+                 /* build realisation simulation */
+                 switch (type)
+                 {
+                     default:
+                     case 1:
+                     {
+                         sim = SSAL_CreateRealisationsSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                     case 2:
+                     {
+                         sim = SSAL_CreateExpectedValueSim(&CRN,n,names,NR,NT,T,X0);
+                     }
+                         break;
+                 }
+ 
             }
         }
             break;
     }
 
-    
-    /* build realisation simulation */
-    switch (type)
-    {
-        default:
-        case 1:
-        {
-            char *obs[1] = {"D"};
-            sim = SSAL_CreateRealisationsSim(&CRN,1,obs,NR,NT,T,X0);
-        }
-            break;
-        case 2:
-        {
-            char *obs[1] = {"D"};
-            sim = SSAL_CreateExpectedValueSim(&CRN,1,obs,NR,NT,T,X0);
-        }
-            break;
-    }
-  
     switch (algType)
     {
         default:

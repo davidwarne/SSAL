@@ -661,7 +661,7 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
             break;
     }
     /*the first pointer is a pointer to the whole array*/
-    if (args != NULL)
+    if (argv != NULL)
     {
         free(argv[0]);
     }
@@ -764,7 +764,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     }
     for (i=0;i<sim->Nvar*sim->NT;i++)
     {
-        E_X[i] = 0;
+        V_X[i] = 0;
     }
     /*algorithm selector*/ 
     switch(alg)
@@ -902,7 +902,11 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
     numChars = 0;
     numArgs = 0;
     i = 0;
-
+    if (args[0] == '\0')
+    {
+        *argc = 0;
+        return NULL;
+    }
     /*first pass to get sizes... a bit insecure as buffer overruns can occur*/
     while (cur_char != '\0' && i != SSAL_MAX_BUFFER_SIZE)
     {

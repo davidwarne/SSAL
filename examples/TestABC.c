@@ -271,7 +271,6 @@ int main(int argc,char ** argv)
     SSAL_ExpectedValueSimulation *EV_ptr;
     SSAL_Simulation sim; /*simulation*/
     SSAL_Simulation simData; /*simulation*/
-    
     /*default values */
     nt = 1;
     t_end = 30.0;
@@ -366,9 +365,9 @@ int main(int argc,char ** argv)
                     break;
             }
         }
-        else
+        else if (!strcmp("-h",argv[i]))
         {
-            fprintf(stdout,"Usage: %s -N numAccepts -MaxN maxTrials -m modelID M c1,...,cM -t NT t1,..,tNT -X0 N X_1(0),...,X_N(0)  -e epsilon -a a1,...,aM -b b1,...bM -T tau\n",argv[0]);
+            fprintf(stdout,"Usage: %s -N numAccepts -MaxN maxTrials -m modelID M c1,...,cM -t NT tend -X0 N X_1(0),...,X_N(0)  -e epsilon -a a1,...,aM -b b1,...bM -T tau\n",argv[0]);
             exit(1);
         }
     }
@@ -450,6 +449,27 @@ int main(int argc,char ** argv)
                 }
             }
             break;
+        case 5: /*schlogl*/
+            nu_minus[0] = 2;
+            nu_minus[1] = 3;
+            nu_minus[2] = 0;
+            nu_minus[3] = 1;
+            nu_plus[0] = 3;
+            nu_plus[1] = 2;
+            nu_plus[2] = 1;
+            nu_plus[3] = 0;
+            break;
+        case 6: /*Schnakenberg*/
+            nu_minus[0] = 2; nu_minus[1] = 1;
+            nu_minus[2] = 0; nu_minus[3] = 0;
+            nu_minus[4] = 1; nu_minus[5] = 0;
+            nu_minus[6] = 0; nu_minus[7] = 0;
+            nu_plus[0] = 3; nu_plus[1] = 0;
+            nu_plus[2] = 1; nu_plus[3] = 0;
+            nu_plus[4] = 0; nu_plus[5] = 0;
+            nu_plus[6] = 0; nu_plus[7] = 1;
+            break;
+
     }
 
     /*create chemical reaction network*/
@@ -463,9 +483,10 @@ int main(int argc,char ** argv)
      
     
     sim = SSAL_CreateRealisationsSim(&CRN,N,names,1,nt,T,X0);
+    //sim = SSAL_CreateExpectedValueSim(&CRN,N,names,100,nt,T,X0);
 
     /*generate dummy data as an example*/
-    simData = SSAL_CreateExpectedValueSim(&CRN,N,names,100,nt,T,X0);
+    simData = SSAL_CreateExpectedValueSim(&CRN,N,names,1,nt,T,X0);
     EV_ptr = (SSAL_ExpectedValueSimulation *)(simData.sim); 
     SSAL_Simulate(&simData,SSAL_ESSA_GILLESPIE_SEQUENTIAL,NULL);
     if (genData)
