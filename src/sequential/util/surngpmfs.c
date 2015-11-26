@@ -42,5 +42,5 @@ unsigned int surngpmfs(int n,float *p,float p_sum)
             break;
         }
     }
-    return k;
+    return (k < n) ? k : n-1;
 }

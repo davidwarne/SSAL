@@ -74,7 +74,6 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
     {
         E_X[i]  = 0;
     }
-
     for (i=0;i<nt*ndims;i++)
     {
         V_X[i] = 0;
@@ -82,7 +81,6 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
 
     /*timing analysis for each level*/
     sumlnls(m,n,T[nt-1],X0,nu_minus,nu,c,tau0,M,L,epsilon,ndims,dims,f,nl);
-     
     if (f == NULL) /* use E[Z(T)] instead of E[f(Z(T))]*/
     {
         /*run level 0 samples*/
@@ -126,9 +124,18 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
         /*run each bias correction term*/
         for (l=1;l<L;l++)
         {
+            if (nl[l] == 0)
+            {
+                taul /= (float)M;
+                continue;
+            }
             for (i=0;i<nt*ndims;i++)
             {
                 E_l[i] = 0;
+            }
+            for (i=0;i<nt*ndims;i++)
+            {
+                E_l2[i] = 0;
             }
             for (j=0;j<nl[l];j++)
             {
@@ -167,7 +174,7 @@ int samlmcbs(int m,int n, int nt, float * restrict T, float * restrict X0, float
             /*add to V_X*/
             for (i=0;i<nt*ndims;i++)
             {
-                V_X[i] += E_l2[i]/((float)nl[l]);
+//                V_X[i] += E_l2[i]/((float)nl[l]);
             }
             taul /= (float)M;
         }

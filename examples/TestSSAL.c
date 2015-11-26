@@ -115,13 +115,14 @@ int main(int argc , char ** argv)
         }
         else if (!strcmp("-h",argv[i]))
         {
-            fprintf(stderr,"Usage: %s [-n numRealisations] -nt numTimePoints -t endTime [-m model] [-st simType] [-T tau]\n");
+            fprintf(stderr,"Usage: %s [-n numRealisations] -nt numTimePoints -t endTime [-m model] [-st simType] [-T tau] [-T0 tau0 -L L -M M -eps eps]\n");
             fprintf(stderr,"\tmodel = 1) Degradation\n");
             fprintf(stderr,"\t        2) Production/Degradation\n");
             fprintf(stderr,"\t        3) Dimerisation Model I (default)\n");
             fprintf(stderr,"\t        4) Schlogl System\n");
             fprintf(stderr,"\t        5) Schnakenberg System\n");
             fprintf(stderr,"\t        6) Dimerisation Model II\n");
+            fprintf(stderr,"\t        7) Michaelis-Menten\n");
             fprintf(stderr,"\tsimType = 1) Realisations\n");
             fprintf(stderr,"\t          2) Expected Values\n");
             exit(0);
@@ -383,6 +384,9 @@ int main(int argc , char ** argv)
         }
             break;
     }
+    free(X0);
+    free(T);
+    SSAL_WriteChemicalReactionNetwork(stderr,*((SSAL_ChemicalReactionNetwork *)CRN.model));
 
     switch (algType)
     {

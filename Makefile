@@ -1,8 +1,8 @@
 #!/bin/make
 
 CC = gcc
-OPTS = -O2 -std=gnu99 -D__SERIAL__ 
-#OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
+#OPTS = -O2 -std=gnu99 -D__SERIAL__ 
+OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
 
 NAME = ssal
 #OPTS = -g   -D__SERIAL__ 

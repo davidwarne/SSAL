@@ -43,7 +43,6 @@ int segils(int m,int n,int nt,float * restrict T, float * restrict X0, float *re
     float t=0;
     float a_0; /*combined propensity*/
     float deltat; /* time to next reaction*/
-    float r1,r2; /*random numbers*/
 
     int i,j,ti;
 

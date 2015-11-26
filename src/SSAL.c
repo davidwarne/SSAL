@@ -255,43 +255,117 @@ int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwor
     {
         return SSAL_IO_ERROR;
     }
+    fprintf(stream,"{\"version\" : \"1\", \"level\" : \"3\",");
+    fprintf(stream,"\"model\" : { \"id\" : \"crn\",\"name\" : \"crn\",\"substanceUnits\" : \"item\", \"timeUnits\" : \"seconds\",\"extentUnits\" : \"item\",");
+    fprintf(stream,"\"compartments\" : [");
+    fprintf(stream,"{\"id\" : \"space\",\"spatialDimensions\" : 0, \"size\" : 0}");
+    fprintf(stream,"],");
+    fprintf(stream,"\"species\" : [");
+        fprintf(stream,"{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[0],0);
+    for (i=1;i<data.N;i++)
+    {
+        fprintf(stream,",{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[i],0);
+    }
+    fprintf(stream,"],");
+    fprintf(stream,"\"parameters\" : [");
+        fprintf(stream,"{\"id\" : \"c%d\",\"value\" : %f}",0,data.c[0]);
+    for (j=1;j<data.M;j++)
+    {
+        fprintf(stream,",{\"id\" : \"c%d\",\"value\" : %f}",j,data.c[j]);
+    }
+    fprintf(stream,"],");
+    fprintf(stream,"\"reactions\" : [");
+        fprintf(stream,"{\"id\" : \"R%d\",\"reversible\" : false, \"reactants\" : [",0);
+        int first = 1;
+        for (i=0;i<data.N;i++)
+        {
+            if (data.nu_minus[i] != 0)
+            {
+                if (first) first = 0;
+                else fprintf(stream,",");
+                fprintf(stream,"{\"species\" : \"%s\", \"stoichiometry\" : %.0f}",data.names[i],data.nu_minus[i]);
+            }
+        }
+        fprintf(stream,"],\"products\" : [");
+        first = 1;
+        for (i=0;i<data.N;i++)
+        {
+            if (data.nu_plus[i] != 0)
+            {
+                if (first) first = 0;
+                else fprintf(stream,",");
 
+            fprintf(stream,"{\"species\" : \"%s\", \"stoichiometry\" : %.0f}",data.names[i],data.nu_plus[i]);
+            }
+        }
+        fprintf(stream,"]}");
+    for (j=1;j<data.M;j++)
+    {
+        fprintf(stream,",{\"id\" : \"R%d\",\"reversible\" : false, \"reactants\" : [",j);
+        first = 1;
+        for (i=0;i<data.N;i++)
+        {
+            if (data.nu_minus[j*data.N + i] != 0)
+            {
+                if (first) first = 0;
+                else fprintf(stream,",");
+            fprintf(stream,"{\"species\" : \"%s\", \"stoichiometry\" : %.0f}",data.names[i],data.nu_minus[j*data.N + i]);
+            }
+        }
+        fprintf(stream,"],\"products\" : [");
+        first = 1;
+        for (i=0;i<data.N;i++)
+        {
+            if (data.nu_plus[j*data.N + i] != 0)
+            {
+                if (first) first = 0;
+                else fprintf(stream,",");
+            fprintf(stream,"{\"species\" : \"%s\", \"stoichiometry\" : %.0f}",data.names[i],data.nu_plus[j*data.N + i]);
+            }
+        }
+        fprintf(stream,"]}");
+
+    }
+    fprintf(stream,"]");
+    fprintf(stream,"}");
+    fprintf(stream,"}\n");
     /*print species data*/
-    fprintf(stream,"Chemical Species:\n");
-    for (i=0;i<data.N;i++)
-    {
-        fprintf(stream,"\tX[%d]: %s\n",i,data.names[i]);
-    }
+    //fprintf(stream,"Chemical Species:\n");
+    //for (i=0;i<data.N;i++)
+    //{
+    //    fprintf(stream,"\tX[%d]: %s\n",i,data.names[i]);
+    //}
 
-    /*print equations*/
-    fprintf(stream,"Chemical Reactions:\n");
-    fprintf(stream,"\t         c \n");
-    fprintf(stream,"\t nu^-*X --> nu^+*X\n");
-    fprintf(stream,"\tnu^- =\n");
-    for (j=0;j<data.M;j++)
-    {
-        fprintf(stream,"\t\t |");
-        for (i=0;i<data.N;i++)
-        {
-            fprintf(stream," %f",data.nu_minus[j*data.N + i]);
-        }
-        fprintf(stream," |\n");
-    }
-    fprintf(stream,"\tnu^+ =\n");
-    for (j=0;j<data.M;j++)
-    {
-        fprintf(stream,"\t\t |");
-        for (i=0;i<data.N;i++)
-        {
-            fprintf(stream," %f",data.nu_plus[j*data.N + i]);
-        }
-        fprintf(stream," |\n");
-    }
-    fprintf(stream,"Kinetic Reaction Rates:\n");
-    for (i=0;i<data.M;i++)
-    {
-        fprintf(stream,"\tc[%d] = %f\n",i,data.c[i]);
-    }
+    ///*print equations*/
+    //fprintf(stream,"Chemical Reactions:\n");
+    //fprintf(stream,"\t         c \n");
+    //fprintf(stream,"\t nu^-*X --> nu^+*X\n");
+    //fprintf(stream,"\tnu^- =\n");
+    //for (j=0;j<data.M;j++)
+    //{
+    //    fprintf(stream,"\t\t |");
+    //    for (i=0;i<data.N;i++)
+    //    {
+    //        fprintf(stream," %f",data.nu_minus[j*data.N + i]);
+    //    }
+    //    fprintf(stream," |\n");
+    //}
+    //fprintf(stream,"\tnu^+ =\n");
+    //for (j=0;j<data.M;j++)
+    //{
+    //    fprintf(stream,"\t\t |");
+    //    for (i=0;i<data.N;i++)
+    //    {
+    //        fprintf(stream," %f",data.nu_plus[j*data.N + i]);
+    //    }
+    //    fprintf(stream," |\n");
+    //}
+    //fprintf(stream,"Kinetic Reaction Rates:\n");
+    //for (i=0;i<data.M;i++)
+    //{
+    //    fprintf(stream,"\tc[%d] = %f\n",i,data.c[i]);
+    //}
+
     return SSAL_SUCCESS; 
 }
 
@@ -498,8 +572,8 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
             SSAL_VARS2INDS(newRS,CRN,newRS->varInd)        
             /*initial conditions will be the initial chemical species copy numbers*/
-            newRS->IC = (float *)malloc((newRS->Nvar)*(CRN->N)*sizeof(float));
-            for (i=0; i<(newRS->Nvar)*(CRN->N); i++)
+            newRS->IC = (float *)malloc((CRN->N)*sizeof(float));
+            for (i=0; i<(CRN->N); i++)
             {
                 newRS->IC[i] = initCond[i];
             }
@@ -586,8 +660,8 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
             SSAL_VARS2INDS(newEVS,CRN,newEVS->varInd) 
             /*initial conditions will be the initial chemical species copy numbers*/
-            newEVS->IC = (float *)malloc((newEVS->Nvar)*(CRN->N)*sizeof(float));
-            for (i=0; i<(newEVS->Nvar)*(CRN->N); i++)
+            newEVS->IC = (float *)malloc((CRN->N)*sizeof(float));
+            for (i=0; i<CRN->N; i++)
             {
                 newEVS->IC[i] = initCond[i];
             }
@@ -664,6 +738,7 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
     if (argv != NULL)
     {
         free(argv[0]);
+        free(argv);
     }
     return rc;
 }
@@ -702,7 +777,6 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     }
 
     X_rj = sim->output;
-
     /*algorithm selector*/ 
     switch(alg)
     {
@@ -876,6 +950,10 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
         sim->E[i] =  E_X[i];
         sim->V[i] =  V_X[i];
     }
+
+    free(X_r);
+    free(E_X);
+    free(V_X);
 }
  
 
