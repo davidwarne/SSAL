@@ -9,12 +9,13 @@ NAME = ssal
 #OPTS = -g
 EXPDIR=examples
 SRCDIR=src
+IODIR=$(SRCDIR)/io
 UTILDIR=$(SRCDIR)/sequential/util
 ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
 
-EXESRC = $(EXPDIR)/TestABC.c $(EXPDIR)/TestSSAL.c
-SRC = $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(ASSADIR)/samlmcbs.c $(ASSADIR)/sactauls.c $(UTILDIR)/sumlnls.c  $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
+EXESRC = $(EXPDIR)/TestABC.c $(EXPDIR)/TestSSAL.c $(EXPDIR)/TestImportLSBML.c
+SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(ASSADIR)/samlmcbs.c $(ASSADIR)/sactauls.c $(UTILDIR)/sumlnls.c  $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c 
 OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)

@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2016  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * @author Science and Engineering Faculty
  * @author Queensland University of Technology
  *
- * @date 20 Sep 2015
+ * @date 12 Feb 2016
  */
 
 #include "SSAL.h"
@@ -487,6 +487,118 @@ int SSAL_WriteRealisationsSim(FILE * stream, SSAL_RealisationSimulation * sim)
             fprintf(stream,"\n");
         }
     }
+}
+
+/**
+ * @brief imports chemical reaction network from an LSBML file.
+ * @param filename the name of the lsbml file
+ * @return A Chemical Reaction Network
+ */
+SSAL_Model SSAL_ImportLSBML(const char * filename )
+{
+    cJSON *root, *model, *parameters, *reactions, *species;
+    FILE *fp;
+    long int size;
+    char * lsbml_json;
+    int i,j;
+    SSAL_ChemicalReactionNetwork *CRN;
+    SSAL_Model newModel; 
+    char * funcname;
+    funcname = "SSAL_ImportLSBML";
+    /*build wrapper struct*/
+    CRN = (SSAL_ChemicalReactionNetwork*)malloc(sizeof(SSAL_ChemicalReactionNetwork));
+    
+    newModel.type = SSAL_CHEMICAL_REACTION_NETWORK;
+    newModel.model = (void *)CRN;
+
+    /*open the file*/
+    if (!(fp = fopen(filename,"r")))
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    /*get file size in bytes*/
+    fseek(fp,0,SEEK_END);
+    size = ftell(fp);
+    rewind(fp);
+    /*allocate buffer*/
+    if(!(lsbml_json = (char *)malloc(size*sizeof(char))))
+    {
+        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    /*read contents*/
+    fread((void *)lsbml_json,sizeof(char),size,fp);
+
+    /*parse the file*/
+    root = cJSON_Parse(lsbml_json);
+    model = cJSON_GetObjectItem(root,"model");
+    parameters = cJSON_GetObjectItem(model,"parameters");
+    reactions = cJSON_GetObjectItem(model,"reactions");
+    species = cJSON_GetObjectItem(model,"species");
+
+    CRN->M = cJSON_GetArraySize(reactions);
+    CRN->N = cJSON_GetArraySize(species);  
+
+    /*allocate memory for CRN components*/
+    CRN->names = (char **)malloc((CRN->N)*sizeof(char*));
+    for (i=0;i<CRN->N;i++)
+    {
+        CRN->names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
+    }
+    CRN->X0 = (float*) malloc((CRN->N)*sizeof(float));
+    CRN->c = (float*) malloc((CRN->M)*sizeof(float));
+    CRN->nu_minus = (float*)malloc((CRN->N)*(CRN->M)*sizeof(float));
+    CRN->nu_plus = (float*)malloc((CRN->N)*(CRN->M)*sizeof(float));
+    memset(CRN->nu_minus,0,(CRN->N)*(CRN->M)*sizeof(float));
+    memset(CRN->nu_plus,0,(CRN->N)*(CRN->M)*sizeof(float));
+    /*read species names*/
+    for (i=0;i<CRN->N;i++)
+    {
+        strncpy(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(species,i),"id")->valuestring,SSAL_MAX_NAME_SIZE);
+        CRN->X0[i] = (float)(cJSON_GetObjectItem(cJSON_GetArrayItem(species,i),"initialAmount")->valuedouble);
+    }
+    /*read rate parameters*/
+    /**@note we assume that the reaction rates are the only parameters, and that they are listed in the same order as the matching reaction*/
+    for (j=0;j<CRN->M;j++)
+    {
+        CRN->c[j] = (float)(cJSON_GetObjectItem(cJSON_GetArrayItem(parameters,j),"value")->valuedouble);
+    }
+
+    /* the reactions*/
+    for (j=0;j<CRN->M;j++)
+    {
+       cJSON *react, *prod;
+       int nReact, nProd,k;
+       char temp[SSAL_MAX_NAME_SIZE];
+       react = cJSON_GetObjectItem(cJSON_GetArrayItem(reactions,j),"reactants");
+       prod = cJSON_GetObjectItem(cJSON_GetArrayItem(reactions,j),"products");
+
+        nReact = cJSON_GetArraySize(react);
+        nProd = cJSON_GetArraySize(prod);
+        for (k=0;k<nReact;k++)
+        {
+            for (i=0;i<CRN->N;i++)
+            {
+                if (!strncmp(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(react,k),"species")->valuestring,SSAL_MAX_NAME_SIZE))
+                {
+                    CRN->nu_minus[j*(CRN->N)+i] = (float)cJSON_GetObjectItem(cJSON_GetArrayItem(react,k),"stoichiometry")->valuedouble;
+                }
+            }
+        }
+        
+        for (k=0;k<nProd;k++)
+        {
+            for (i=0;i<CRN->N;i++)
+            {
+                if (!strncmp(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(prod,k),"species")->valuestring,SSAL_MAX_NAME_SIZE))
+                {
+                    CRN->nu_plus[j*(CRN->N)+i] = (float)cJSON_GetObjectItem(cJSON_GetArrayItem(prod,k),"stoichiometry")->valuedouble;
+                }
+            }
+        }
+
+    }
+    cJSON_Delete(root);
+    return newModel;
 }
 
 /**

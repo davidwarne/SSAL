@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include "cJSON.h"
 #include "SSAL_internal.h"
 /*error codes*/
 #define SSAL_SUCCESS                    0
@@ -109,6 +110,8 @@ struct SSAL_ChemicalReactionNetwork_struct {
     float *nu_plus;
     /** kinetic rate constants*/
     float *c;
+    /**default initial condition*/
+    float *X0;
 };
 /** type name for  SSAL_ChemicalReactionNetwork_struct*/
 typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
@@ -211,18 +214,21 @@ typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
 
 /* function prototypes*/
 
+/*initialisation an error handling*/
 void SSAL_InitRNGS(unsigned int *, int);
 
 void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
 
 int SSAL_Initialise(int,char **); 
 
+/*object creation*/
 SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
                             float * restrict , float * restrict , float * restrict );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 float*, float * );
 SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *,int, char **, int, int, 
                                 float*, float * );
+/* simulation and operations*/
 int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 
 int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
@@ -231,10 +237,15 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *,
 int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType , int , char **);
 
+/*output*/
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
 int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
 int SSAL_WriteExpectedValueSim(FILE *, SSAL_ExpectedValueSimulation *);
 
+/*input*/
+SSAL_Model SSAL_ImportLSBML(const char * );
+
+/*utilities*/
 char** SSAL_UtilTokeniseArgs(int *,const char *);
 #endif

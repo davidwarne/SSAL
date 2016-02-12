@@ -1,0 +1,131 @@
+{
+    "level": "3",
+    "model": {
+        "compartments": [
+            {
+                "id": "space",
+                "size": 0,
+                "spatialDimensions": 0
+            }
+        ],
+        "extentUnits": "item",
+        "id": "dI",
+        "name": "dimerisation-I",
+        "parameters": [
+            {
+                "id": "c0",
+                "value": 25.0
+            },
+            {
+                "id": "c1",
+                "value": 1000.0
+            },
+            {
+                "id": "c2",
+                "value": 0.001
+            },
+            {
+                "id": "c3",
+                "value": 0.1
+            },
+            {
+                "id": "c4",
+                "value": 1.0
+            }
+        ],
+        "reactions": [
+            {
+                "id": "R0",
+                "products": [
+                    {
+                        "species": "M",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reactants": [],
+                "reversible": false
+            },
+            {
+                "id": "R1",
+                "products": [
+                    {
+                        "species": "M",
+                        "stoichiometry": 1
+                    },
+                    {
+                        "species": "P",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reactants": [
+                    {
+                        "species": "M",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reversible": false
+            },
+            {
+                "id": "R2",
+                "products": [
+                    {
+                        "species": "D",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reactants": [
+                    {
+                        "species": "P",
+                        "stoichiometry": 2
+                    }
+                ],
+                "reversible": false
+            },
+            {
+                "id": "R3",
+                "products": [],
+                "reactants": [
+                    {
+                        "species": "M",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reversible": false
+            },
+            {
+                "id": "R4",
+                "products": [],
+                "reactants": [
+                    {
+                        "species": "P",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reversible": false
+            }
+        ],
+        "species": [
+            {
+                "compartment": "space",
+                "hasOnlySubstanceUnits": true,
+                "id": "M",
+                "initialAmount": 0
+            },
+            {
+                "compartment": "space",
+                "hasOnlySubstanceUnits": true,
+                "id": "P",
+                "initialAmount": 0
+            },
+            {
+                "compartment": "space",
+                "hasOnlySubstanceUnits": true,
+                "id": "D",
+                "initialAmount": 0
+            }
+        ],
+        "substanceUnits": "item",
+        "timeUnits": "seconds"
+    },
+    "version": "1"
+}

@@ -1,0 +1,45 @@
+{
+    "level": "3",
+    "model": {
+        "compartments": [
+            {
+                "id": "space",
+                "size": 0,
+                "spatialDimensions": 0
+            }
+        ],
+        "extentUnits": "item",
+        "id": "crn",
+        "name": "crn",
+        "parameters": [
+            {
+                "id": "c0",
+                "value": 0.1
+            }
+        ],
+        "reactions": [
+            {
+                "id": "R0",
+                "products": [],
+                "reactants": [
+                    {
+                        "species": "A",
+                        "stoichiometry": 1
+                    }
+                ],
+                "reversible": false
+            }
+        ],
+        "species": [
+            {
+                "compartment": "space",
+                "hasOnlySubstanceUnits": true,
+                "id": "A",
+                "initialAmount": 0
+            }
+        ],
+        "substanceUnits": "item",
+        "timeUnits": "seconds"
+    },
+    "version": "1"
+}
