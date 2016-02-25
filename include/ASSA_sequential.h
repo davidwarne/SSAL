@@ -23,16 +23,28 @@
 
 #define MLMC_TIMING_TRIALS 100
 
+/*Tau-leaping method*/
 int satauls(int,int,int,float * restrict, float *restrict, float * restrict, 
     float * restrict, float *restrict, int, int * restrict, float, float * restrict);
 
+int datauls(int,int,int,double * restrict, double *restrict, double * restrict, 
+    double * restrict, double *restrict, int, int * restrict, double, double * restrict);
+
+/*Correllated tau-leaping method (for nested tau levels)*/
 int sactauls(int, int, int, float * restrict, float * restrict, float * restrict, 
     float * restrict, float * restrict, int, int * restrict, float, int, float * restrict, 
     float * restrict);
 
+int dactauls(int, int, int, double * restrict, double * restrict, double * restrict, 
+    double * restrict, double * restrict, int, int * restrict, double, int, double * restrict, 
+    double * restrict);
 
+/* Multilevel Monte Carlo estimator for DSCT Markov Processes (bias estimator)*/
 int samlmcbs(int ,int , int , float * restrict , float * restrict , float * restrict ,
     float * restrict , float * restrict , float , int , int , float, 
     int,int * restrict , int (*)(int,float *, float *), float * restrict , float * restrict );
 
+int damlmcbs(int ,int , int , double * restrict , double * restrict , double * restrict ,
+    double * restrict , double * restrict , double , int , int , double, 
+    int,int * restrict , int (*)(int,double *, double *), double * restrict , double * restrict );
 #endif

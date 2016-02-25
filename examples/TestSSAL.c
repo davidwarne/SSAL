@@ -35,9 +35,9 @@ int main(int argc , char ** argv)
     int i;
     int NT;
     int NR; /*number of realisations*/
-    float dt;
-    float *T;
-    float *X0;
+    SSAL_real_t dt;
+    SSAL_real_t *T;
+    SSAL_real_t *X0;
     char **names;
     //int model;
     int type;
@@ -45,10 +45,10 @@ int main(int argc , char ** argv)
     int m,n;
 
     /*tau-leap args*/
-    float tau;
+    SSAL_real_t tau;
     /*Multi-level args*/
     int M,L;
-    float tau0,eps;
+    SSAL_real_t tau0,eps;
 
     char *filename;
     SSAL_AlgorithmType algType;
@@ -79,8 +79,8 @@ int main(int argc , char ** argv)
                 fprintf(stderr,"Must use the -nt option to choose number of time points\n");
                 exit(1);
             }
-            T = (float *)malloc(NT*sizeof(float));
-            T[NT-1] = (float)atof(argv[++i]);
+            T = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
+            T[NT-1] = (SSAL_real_t)atof(argv[++i]);
         }
         else if (!strcmp("-f",argv[i]))
         {
@@ -97,7 +97,7 @@ int main(int argc , char ** argv)
         else if (!strcmp("-T",argv[i]))
         {
             algType = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;
-            tau = (float)atof(argv[++i]);
+            tau = (SSAL_real_t)atof(argv[++i]);
         }
         else if(!strcmp("-L",argv[i]))
         {
@@ -112,12 +112,12 @@ int main(int argc , char ** argv)
         else if(!strcmp("-T0",argv[i]))
         {
             algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            tau0 = (float)atof(argv[++i]);
+            tau0 = (SSAL_real_t)atof(argv[++i]);
         }
         else if(!strcmp("-eps",argv[i]))
         {
             algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            eps = (float)atof(argv[++i]);
+            eps = (SSAL_real_t)atof(argv[++i]);
         }
         else if (!strcmp("-h",argv[i]))
         {
@@ -128,9 +128,9 @@ int main(int argc , char ** argv)
     }
     
     /*build sample times*/
-    dt = T[NT-1]/((float)(NT));
+    dt = T[NT-1]/((SSAL_real_t)(NT));
     for (i=0; i < (NT-1); i++){
-        T[i] = dt*((float)(i+1));
+        T[i] = dt*((SSAL_real_t)(i+1));
     }
 
     

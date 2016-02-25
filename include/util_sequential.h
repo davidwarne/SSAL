@@ -63,14 +63,26 @@ void suarngs(unsigned int, void (*)(unsigned int), int (*)(void));
 float surngexps(float);
 float surngus(float, float);
 
+double durngexps(double);
+double durngus(double, double);
+
 /*Discrete distribution samplers*/
 unsigned int surngpmfs(int,float *,float);
 unsigned int surngpois(float);
 
-int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restrict);
+unsigned int durngpmfs(int,double *,double);
+unsigned int durngpois(double);
 
+/*hazard rate/ propensity function computation*/
+int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restrict);
+int duhzds(int ,int ,double * restrict, double *, double * restrict, double * restrict);
+
+/*empirical MLMC optimal sample size estimation*/
 int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
     float * restrict, float, int, int, float, int, int * restrict, 
     int (*)(int, float *, float *), int * restrict);
 
+int dumlnls(int, int, double, double * restrict, double * restrict, double * restrict, 
+    double * restrict, double, int, int, double, int, int * restrict, 
+    int (*)(int, double *, double *), int * restrict);
 #endif

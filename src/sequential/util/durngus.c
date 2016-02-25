@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2016  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ESSA_SEQUENTIAL_H_
-#define __ESSA_SEQUENTIAL_H_
-
 #include "util_sequential.h"
 
-/*Gillespie method*/
-int segils(int,int,int,float * restrict, float *restrict, float * restrict, 
-    float * restrict, float *restrict, int, int * restrict, float * restrict);
-
-int degils(int,int,int,double * restrict, double *restrict, double * restrict, 
-    double * restrict, double *restrict, int, int * restrict, double * restrict);
+/**
+ * @brief Single precision uniform random number generator
+ *
+ * @returns X ~ U(a,b)
+ */
+double durngus(double a, double b)
+{
+    int i;
+#if defined(__MKL__)
+#elif defined(__GSL__)
+    return (double) gsl_ran_flat(__UTIL_sRNG.r,(double)a,(double)b);
+#else
+    return DURAND*(b - a) + a;
 #endif
+}

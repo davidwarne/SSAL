@@ -161,7 +161,7 @@ int SSAL_Initialise(int argc,char **argv)
  * are not valid.
  */
 SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N, 
-                            float * restrict nu_minus, float * restrict nu_plus, float * restrict c)
+                            SSAL_real_t * restrict nu_minus, SSAL_real_t * restrict nu_plus, SSAL_real_t * restrict c)
 {
     int i;
     char * funcname;
@@ -198,15 +198,15 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
         newCRN->names[i] = nameArray + i*SSAL_MAX_NAME_SIZE;
     }
     
-    if((newCRN->nu_minus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float))) == NULL)
+    if((newCRN->nu_minus = (SSAL_real_t *)malloc(newCRN->N*newCRN->M*sizeof(SSAL_real_t))) == NULL)
     {
         SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
     }
-    if((newCRN->nu_plus = (float *)malloc(newCRN->N*newCRN->M*sizeof(float))) == NULL)
+    if((newCRN->nu_plus = (SSAL_real_t *)malloc(newCRN->N*newCRN->M*sizeof(SSAL_real_t))) == NULL)
     {
         SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
     }
-    if((newCRN->c = (float *)malloc(newCRN->M*sizeof(float))) == NULL)
+    if((newCRN->c = (SSAL_real_t *)malloc(newCRN->M*sizeof(SSAL_real_t))) == NULL)
     {
         SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
     }
@@ -544,23 +544,23 @@ SSAL_Model SSAL_ImportLSBML(const char * filename )
     {
         CRN->names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
     }
-    CRN->X0 = (float*) malloc((CRN->N)*sizeof(float));
-    CRN->c = (float*) malloc((CRN->M)*sizeof(float));
-    CRN->nu_minus = (float*)malloc((CRN->N)*(CRN->M)*sizeof(float));
-    CRN->nu_plus = (float*)malloc((CRN->N)*(CRN->M)*sizeof(float));
-    memset(CRN->nu_minus,0,(CRN->N)*(CRN->M)*sizeof(float));
-    memset(CRN->nu_plus,0,(CRN->N)*(CRN->M)*sizeof(float));
+    CRN->X0 = (SSAL_real_t*) malloc((CRN->N)*sizeof(SSAL_real_t));
+    CRN->c = (SSAL_real_t*) malloc((CRN->M)*sizeof(SSAL_real_t));
+    CRN->nu_minus = (SSAL_real_t*)malloc((CRN->N)*(CRN->M)*sizeof(SSAL_real_t));
+    CRN->nu_plus = (SSAL_real_t*)malloc((CRN->N)*(CRN->M)*sizeof(SSAL_real_t));
+    memset(CRN->nu_minus,0,(CRN->N)*(CRN->M)*sizeof(SSAL_real_t));
+    memset(CRN->nu_plus,0,(CRN->N)*(CRN->M)*sizeof(SSAL_real_t));
     /*read species names*/
     for (i=0;i<CRN->N;i++)
     {
         strncpy(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(species,i),"id")->valuestring,SSAL_MAX_NAME_SIZE);
-        CRN->X0[i] = (float)(cJSON_GetObjectItem(cJSON_GetArrayItem(species,i),"initialAmount")->valuedouble);
+        CRN->X0[i] = (SSAL_real_t)(cJSON_GetObjectItem(cJSON_GetArrayItem(species,i),"initialAmount")->valuedouble);
     }
     /*read rate parameters*/
     /**@note we assume that the reaction rates are the only parameters, and that they are listed in the same order as the matching reaction*/
     for (j=0;j<CRN->M;j++)
     {
-        CRN->c[j] = (float)(cJSON_GetObjectItem(cJSON_GetArrayItem(parameters,j),"value")->valuedouble);
+        CRN->c[j] = (SSAL_real_t)(cJSON_GetObjectItem(cJSON_GetArrayItem(parameters,j),"value")->valuedouble);
     }
 
     /* the reactions*/
@@ -580,7 +580,7 @@ SSAL_Model SSAL_ImportLSBML(const char * filename )
             {
                 if (!strncmp(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(react,k),"species")->valuestring,SSAL_MAX_NAME_SIZE))
                 {
-                    CRN->nu_minus[j*(CRN->N)+i] = (float)cJSON_GetObjectItem(cJSON_GetArrayItem(react,k),"stoichiometry")->valuedouble;
+                    CRN->nu_minus[j*(CRN->N)+i] = (SSAL_real_t)cJSON_GetObjectItem(cJSON_GetArrayItem(react,k),"stoichiometry")->valuedouble;
                 }
             }
         }
@@ -591,7 +591,7 @@ SSAL_Model SSAL_ImportLSBML(const char * filename )
             {
                 if (!strncmp(CRN->names[i],cJSON_GetObjectItem(cJSON_GetArrayItem(prod,k),"species")->valuestring,SSAL_MAX_NAME_SIZE))
                 {
-                    CRN->nu_plus[j*(CRN->N)+i] = (float)cJSON_GetObjectItem(cJSON_GetArrayItem(prod,k),"stoichiometry")->valuedouble;
+                    CRN->nu_plus[j*(CRN->N)+i] = (SSAL_real_t)cJSON_GetObjectItem(cJSON_GetArrayItem(prod,k),"stoichiometry")->valuedouble;
                 }
             }
         }
@@ -613,7 +613,7 @@ SSAL_Model SSAL_ImportLSBML(const char * filename )
  * @param initCond initial conditions 
  */
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, int NR, int NT, 
-                                float* T, float * initCond)
+                                SSAL_real_t* T, SSAL_real_t * initCond)
 {
     int i;
     char * obsArray;
@@ -636,7 +636,7 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
     newRS->NR = NR;
     newRS->NT = NT;
     
-    if((newRS->T = (float *)malloc(NT*sizeof(float)))==NULL)
+    if((newRS->T = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t)))==NULL)
     {
         SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
     }
@@ -684,13 +684,13 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
             SSAL_VARS2INDS(newRS,CRN,newRS->varInd)        
             /*initial conditions will be the initial chemical species copy numbers*/
-            newRS->IC = (float *)malloc((CRN->N)*sizeof(float));
+            newRS->IC = (SSAL_real_t *)malloc((CRN->N)*sizeof(SSAL_real_t));
             for (i=0; i<(CRN->N); i++)
             {
                 newRS->IC[i] = initCond[i];
             }
 
-            newRS->output = (float *)malloc((newRS->Nvar)*(newRS->NT)*(newRS->NR)*sizeof(float));
+            newRS->output = (SSAL_real_t *)malloc((newRS->Nvar)*(newRS->NT)*(newRS->NR)*sizeof(SSAL_real_t));
         }
             break;
         default:
@@ -713,7 +713,7 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
  * @param initCond initial conditions 
  */
 SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs, int NR, int NT, 
-                                float* T, float * initCond)
+                                SSAL_real_t* T, SSAL_real_t * initCond)
 {
     int i;
     char * obsArray;
@@ -728,7 +728,7 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
     /*allocate memory*/
     newEVS->NR = NR;
     newEVS->NT = NT;
-    newEVS->T = (float *)malloc(NT*sizeof(float));
+    newEVS->T = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
 
     /**@todo extend to handle multiple scenarios */
     newEVS->NIC = 1; 
@@ -772,14 +772,14 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
             CRN = (SSAL_ChemicalReactionNetwork *)model->model;
             SSAL_VARS2INDS(newEVS,CRN,newEVS->varInd) 
             /*initial conditions will be the initial chemical species copy numbers*/
-            newEVS->IC = (float *)malloc((CRN->N)*sizeof(float));
+            newEVS->IC = (SSAL_real_t *)malloc((CRN->N)*sizeof(SSAL_real_t));
             for (i=0; i<CRN->N; i++)
             {
                 newEVS->IC[i] = initCond[i];
             }
 
-            newEVS->E = (float *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(float));
-            newEVS->V = (float *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(float));
+            newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
+            newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
         }
             break;
         default:
@@ -880,8 +880,8 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
 {
     int j,i;
-    float nu[model->N*model->M];
-    float * X_rj;
+    SSAL_real_t nu[model->N*model->M];
+    SSAL_real_t * X_rj;
 
     for (i=0;i<model->N*model->M;i++)
     {
@@ -896,20 +896,30 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
         {
             for (j=0;j<sim->NR;j++)
             {
+#ifdef __FLOAT64__
+                degils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                    nu,model->c,sim->Nvar,sim->varInd,X_rj+j*(sim->NT*sim->Nvar));
+#else
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,sim->varInd,X_rj+j*(sim->NT*sim->Nvar));
+#endif
             }
         }
             break;
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
         {
-            float tau;
-            tau = (float)atof(SSAL_GetArg("--tau",argc,argv));
+            SSAL_real_t tau;
+            tau = (SSAL_real_t)atof(SSAL_GetArg("--tau",argc,argv));
 
             for (j=0;j<sim->NR;j++)
             {
+#ifdef __FLOAT64__
+                datauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                    nu,model->c,sim->Nvar,sim->varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
+#else
                 satauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,sim->varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
+#endif
             }
         }
             break;
@@ -931,19 +941,19 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             SSAL_ChemicalReactionNetwork *model, SSAL_AlgorithmType alg, int argc, char ** argv)
 {
     int j,i;
-    float nu[model->N*model->M];
-    float * X_r;
-    float * E_X;
-    float * V_X;
+    SSAL_real_t nu[model->N*model->M];
+    SSAL_real_t * X_r;
+    SSAL_real_t * E_X;
+    SSAL_real_t * V_X;
 
     for (i=0;i<model->N*model->M;i++)
     {
         nu[i] = model->nu_plus[i] - model->nu_minus[i] ;
     }
 
-    X_r = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
-    E_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
-    V_X = (float *)malloc(sim->NT*sim->Nvar*sizeof(float));
+    X_r = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
+    E_X = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
+    V_X = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
     for (i=0;i<sim->Nvar*sim->NT;i++)
     {
         E_X[i] = 0;
@@ -961,8 +971,13 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
              * when a large number of realisations are used*/                
             for (j=0;j<sim->NR;j++)
             {
+#ifdef __FLOAT64__
+                degils(model->M,model->N,sim->NT,sim->T,sim->IC,
+                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,X_r);
+#else
                 segils(model->M,model->N,sim->NT,sim->T,sim->IC,
                     model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,X_r);
+#endif
                 
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
@@ -976,11 +991,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
 
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                E_X[i] /= (float)(sim->NR);
+                E_X[i] /= (SSAL_real_t)(sim->NR);
             }
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                V_X[i] /= (float)(sim->NR);
+                V_X[i] /= (SSAL_real_t)(sim->NR);
             }
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
@@ -992,20 +1007,25 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
              */
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                V_X[i] /= (float)(sim->NR);
+                V_X[i] /= (SSAL_real_t)(sim->NR);
             }
 
         }
             break;
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
         {
-            float tau;
-            tau = (float)atof(SSAL_GetArg("--tau",argc,argv));
+            SSAL_real_t tau;
+            tau = (SSAL_real_t)atof(SSAL_GetArg("--tau",argc,argv));
             
             for (j=0;j<sim->NR;j++)
             {
+#ifdef __FLOAT64__
+                datauls(model->M,model->N,sim->NT,sim->T,sim->IC,
+                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,tau,X_r);
+#else
                 satauls(model->M,model->N,sim->NT,sim->T,sim->IC,
                     model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,tau,X_r);
+#endif
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
                     E_X[i] += (double)X_r[i];
@@ -1018,11 +1038,11 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
 
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                E_X[i] /= (float)(sim->NR);
+                E_X[i] /= (SSAL_real_t)(sim->NR);
             }
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                V_X[i] /= (float)(sim->NR);
+                V_X[i] /= (SSAL_real_t)(sim->NR);
             }
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
@@ -1034,7 +1054,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
              */
             for (i=0;i<sim->Nvar*sim->NT;i++)
             {
-                V_X[i] /= (float)(sim->NR);
+                V_X[i] /= (SSAL_real_t)(sim->NR);
             }
 
 
@@ -1042,14 +1062,19 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             break;
         case SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL:
         {
-            float tau0, eps;
+            SSAL_real_t tau0, eps;
             int M, L;
-            tau0 = (float)atof(SSAL_GetArg("--tau0",argc,argv));
+            tau0 = (SSAL_real_t)atof(SSAL_GetArg("--tau0",argc,argv));
             M = (int)atoi(SSAL_GetArg("--M",argc,argv));
             L = (int)atoi(SSAL_GetArg("--L",argc,argv));
-            eps = (float)atof(SSAL_GetArg("--eps",argc,argv));
+            eps = (SSAL_real_t)atof(SSAL_GetArg("--eps",argc,argv));
+#ifdef __FLOAT64__
+            damlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+                nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
+#else
             samlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                 nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
+#endif
         }
             break;
         default:

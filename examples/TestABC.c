@@ -39,10 +39,10 @@
  * @param X dataset 
  * @param X_star simulated data
  */
-float rho(int n, int nt, float *X, float *X_star)
+SSAL_real_t rho(int n, int nt, SSAL_real_t *X, SSAL_real_t *X_star)
 {
     int i;
-    float d,sum; 
+    SSAL_real_t d,sum; 
     sum = 0;
 
     for (i=0;i<n*nt;i++)
@@ -69,11 +69,11 @@ float rho(int n, int nt, float *X, float *X_star)
  * @param X dataset
  * @param X_start simulation data
  */
-float rho2(int n, int nt, float * X, float *X_star)
+SSAL_real_t rho2(int n, int nt, SSAL_real_t * X, SSAL_real_t *X_star)
 {
     int i,t;
-    float X_norm, X_star_norm;
-    float d;
+    SSAL_real_t X_norm, X_star_norm;
+    SSAL_real_t d;
     d = 0;
     for (t=0;t<nt;t++)
     {
@@ -126,22 +126,22 @@ float rho2(int n, int nt, float * X, float *X_star)
  *
  */
 int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int max_n, 
-    int nacc, float *data, int m,float *a, float *b, float (*rho)(int, int, float *, float *),
-    float eps, float * theta, float *rhoVals, int *numAccept, float *acceptRate)
+    int nacc, SSAL_real_t *data, int m,SSAL_real_t *a, SSAL_real_t *b, SSAL_real_t (*rho)(int, int, SSAL_real_t *, SSAL_real_t *),
+    SSAL_real_t eps, SSAL_real_t * theta, SSAL_real_t *rhoVals, int *numAccept, SSAL_real_t *acceptRate)
 {
     int i,j,k;
     SSAL_ChemicalReactionNetwork *CRN_ptr;
     SSAL_RealisationSimulation *RS_ptr;
-    float *X_r;
+    SSAL_real_t *X_r;
 
     CRN_ptr = (SSAL_ChemicalReactionNetwork *)(sim->model->model);
     RS_ptr = (SSAL_RealisationSimulation *)(sim->sim);
-    X_r = (float *)(RS_ptr->output);
+    X_r = (SSAL_real_t *)(RS_ptr->output);
     
     k=0;
     for (i=0;i<max_n;i++)
     {
-        float d;
+        SSAL_real_t d;
         /*generate sample theta ~ U(a,b)*/
         for (j=0;j<m;j++)
         {
@@ -170,7 +170,7 @@ int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int m
     }
 
     *numAccept = k;
-    *acceptRate = ((float)k)/((float)i);
+    *acceptRate = ((SSAL_real_t)k)/((SSAL_real_t)i);
 
     return 0;
 }
@@ -180,7 +180,7 @@ int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int m
  * @brief Exact solution for deterministic versions of model
  * 
  */
-int ExactSoln(int model,int nt, float * T, float X0, float *c, float *X)
+int ExactSoln(int model,int nt, SSAL_real_t * T, SSAL_real_t X0, SSAL_real_t *c, SSAL_real_t *X)
 {
     int t;
     if (model == 1)
@@ -200,8 +200,8 @@ int ExactSoln(int model,int nt, float * T, float X0, float *c, float *X)
     return 0;
 }
 
-int WriteData(FILE *stream, int M,int numAccept,float epsilon, float *rhoV,int model,
-    float acceptRate,float * theta_r, float *theta_s)
+int WriteData(FILE *stream, int M,int numAccept,SSAL_real_t epsilon, SSAL_real_t *rhoV,int model,
+    SSAL_real_t acceptRate,SSAL_real_t * theta_r, SSAL_real_t *theta_s)
 {
     static unsigned char header = 1;
     int i,j;
@@ -240,27 +240,27 @@ int WriteData(FILE *stream, int M,int numAccept,float epsilon, float *rhoV,int m
 
 int main(int argc,char ** argv)
 {
-    float epsilon; /*acceptance threshold*/
-    float *rhoV; /*array to store distances*/
-    float *c_sample; /*array to store samples*/
+    SSAL_real_t epsilon; /*acceptance threshold*/
+    SSAL_real_t *rhoV; /*array to store distances*/
+    SSAL_real_t *c_sample; /*array to store samples*/
     int numAccept;
-    float acceptRate;
+    SSAL_real_t acceptRate;
     unsigned int genData;
 
     int nsamples; /*number of samples from posterior to obtain*/
     int nMax; /*Max number of simulations runs*/
-    float *T; /*time points as out summary statistic*/
-    float t_end; /*simulation endtim*/
+    SSAL_real_t *T; /*time points as out summary statistic*/
+    SSAL_real_t t_end; /*simulation endtim*/
     int nt; /*size of summary statistic*/
     int model; /*1 = degradation 2 = production/degradation*/
     int M; /*number of parameters specified*/
-    float *X0; /*initial condition*/
+    SSAL_real_t *X0; /*initial condition*/
     int N; /*size of state space*/
-    float *nu_minus;
-    float *nu_plus;
-    float *a,*b; /*intervals of prior distributions*/
-    float *c_real; /*rate parameters used to generate data*/
-    float *X_data;
+    SSAL_real_t *nu_minus;
+    SSAL_real_t *nu_plus;
+    SSAL_real_t *a,*b; /*intervals of prior distributions*/
+    SSAL_real_t *c_real; /*rate parameters used to generate data*/
+    SSAL_real_t *X_data;
     char **names; /*species symbol names*/
     int i,j; /*loop counters*/
     
@@ -302,51 +302,51 @@ int main(int argc,char ** argv)
         else if (!strcmp("-t",argv[i]))
         {
             nt = (int)atoi(argv[++i]);
-            T = (float *)malloc(nt*sizeof(float));
-            T[nt - 1] = (float)atof(argv[++i]);
+            T = (SSAL_real_t *)malloc(nt*sizeof(SSAL_real_t));
+            T[nt - 1] = (SSAL_real_t)atof(argv[++i]);
 
             for (j=0;j<(nt-1);j++)
             {
-                T[j] = (j+1)*(T[nt-1]/((float)nt));
+                T[j] = (j+1)*(T[nt-1]/((SSAL_real_t)nt));
             }
         }
         else if (!strcmp("-m",argv[i]))
         {
             model = (int)atoi(argv[++i]);
             M = (int)atoi(argv[++i]);
-            c_real = (float *)malloc(M*sizeof(float));
+            c_real = (SSAL_real_t *)malloc(M*sizeof(SSAL_real_t));
             for (j=0;j<M;j++)
             {
-                c_real[j] = (float)atof(argv[++i]);
+                c_real[j] = (SSAL_real_t)atof(argv[++i]);
             }
         }
         else if (!strcmp("-X0",argv[i]))
         {
             N = (int)atoi(argv[++i]);
-            X0 = (float *)malloc(N*sizeof(float));
+            X0 = (SSAL_real_t *)malloc(N*sizeof(SSAL_real_t));
             for (j=0;j<N;j++)
             {
-                X0[j] = (float)atof(argv[++i]);
+                X0[j] = (SSAL_real_t)atof(argv[++i]);
             }
         }
         else if (!strcmp("-e",argv[i]))
         {
-            epsilon = (float)atof(argv[++i]);
+            epsilon = (SSAL_real_t)atof(argv[++i]);
         }
         else if (!strcmp("-a",argv[i]))
         {
-            a = (float *)malloc(M*sizeof(float));
+            a = (SSAL_real_t *)malloc(M*sizeof(SSAL_real_t));
             for (j=0;j<M;j++)
             {
-                a[j] = (float)atof(argv[++i]);
+                a[j] = (SSAL_real_t)atof(argv[++i]);
             }
         }
         else if (!strcmp("-b",argv[i]))
         {
-            b = (float *)malloc(M*sizeof(float));
+            b = (SSAL_real_t *)malloc(M*sizeof(SSAL_real_t));
             for (j=0;j<M;j++)
             {
-                b[j] = (float)atof(argv[++i]);
+                b[j] = (SSAL_real_t)atof(argv[++i]);
             }
         }
         else if (!strcmp("-alg",argv[i]))
@@ -374,8 +374,8 @@ int main(int argc,char ** argv)
 
     /*allocate memory of reaction network*/
     names = (char **)malloc(N*sizeof(char *));
-    nu_minus = (float *)malloc(N*M*sizeof(float));
-    nu_plus = (float *)malloc(N*M*sizeof(float));
+    nu_minus = (SSAL_real_t *)malloc(N*M*sizeof(SSAL_real_t));
+    nu_plus = (SSAL_real_t *)malloc(N*M*sizeof(SSAL_real_t));
 
     for (i=0;i<N*N;i++)
     {
@@ -478,8 +478,8 @@ int main(int argc,char ** argv)
 
 
     /*allocate memory*/
-    rhoV = (float *)malloc(nsamples*sizeof(float));
-    c_sample = (float *)malloc(nsamples*CRN_ptr->M*sizeof(float));
+    rhoV = (SSAL_real_t *)malloc(nsamples*sizeof(SSAL_real_t));
+    c_sample = (SSAL_real_t *)malloc(nsamples*CRN_ptr->M*sizeof(SSAL_real_t));
      
     
     sim = SSAL_CreateRealisationsSim(&CRN,N,names,1,nt,T,X0);

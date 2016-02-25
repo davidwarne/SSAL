@@ -38,6 +38,11 @@
 #define SSAL_MAX_BUFFER_SIZE    1024
 
 
+#ifdef __FLOAT64__
+    typedef double SSAL_real_t;
+#else
+    typedef float  SSAL_real_t;
+#endif
 
 
 /**@struct SSAL_Options_struct
@@ -49,6 +54,7 @@ struct SSAL_Options_struct {
 };
 
 typedef struct SSAL_Options_struct SSAL_Options;
+
 
 /**
  * @enum SSAL_AlgorithmType_enum
@@ -105,13 +111,13 @@ struct SSAL_ChemicalReactionNetwork_struct {
     /** number of reactions */
     uint32_t M;
     /** stochiometric coefficient matrix of the reactants */
-    float *nu_minus;
+    SSAL_real_t *nu_minus;
     /** stochiometric coefficient matrix of the products */
-    float *nu_plus;
+    SSAL_real_t *nu_plus;
     /** kinetic rate constants*/
-    float *c;
+    SSAL_real_t *c;
     /**default initial condition*/
-    float *X0;
+    SSAL_real_t *X0;
 };
 /** type name for  SSAL_ChemicalReactionNetwork_struct*/
 typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
@@ -139,20 +145,20 @@ struct SSAL_RealisationSimulation_struct {
     /**numbr of observation times */
     int NT;
     /** observation times */
-    float *T;
+    SSAL_real_t *T;
     /** number of realisations*/
     int NR;
     /**number of initial conditions */
     int NIC;
     /** initial conditions */
-    float *IC;
+    SSAL_real_t *IC;
     /** number of variables to observe */
     int Nvar;
     /** model variables to observe by name */
     char **var;
     int *varInd;
     /** output data*/
-    float *output;
+    SSAL_real_t *output;
 };
 /** type name for  SSAL_RealisationSimulation_struct*/
 typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
@@ -164,21 +170,21 @@ struct SSAL_ExpectedValueSimulation_struct {
     /**numbr of observation times */
     int NT;
     /** observation times */
-    float *T;
+    SSAL_real_t *T;
     /** number of realisations*/
     int NR;
     /**number of initial conditions */
     int NIC;
     /** initial conditions */
-    float *IC;
+    SSAL_real_t *IC;
     /** number od vvariables to observe */
     int Nvar;
     /** model variables to observe by name */
     char **var;
     int *varInd;
     /** output data*/
-    float *E;
-    float *V;
+    SSAL_real_t *E;
+    SSAL_real_t *V;
 };
 /** type name for  SSAL_ExpectedValueSimulation_struct*/
 typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
@@ -223,11 +229,11 @@ int SSAL_Initialise(int,char **);
 
 /*object creation*/
 SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
-                            float * restrict , float * restrict , float * restrict );
+                            SSAL_real_t * restrict , SSAL_real_t * restrict , SSAL_real_t * restrict );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
-                                float*, float * );
+                                SSAL_real_t *, SSAL_real_t * );
 SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *,int, char **, int, int, 
-                                float*, float * );
+                                SSAL_real_t*, SSAL_real_t * );
 /* simulation and operations*/
 int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 

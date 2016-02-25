@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2016  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ESSA_SEQUENTIAL_H_
-#define __ESSA_SEQUENTIAL_H_
-
 #include "util_sequential.h"
 
-/*Gillespie method*/
-int segils(int,int,int,float * restrict, float *restrict, float * restrict, 
-    float * restrict, float *restrict, int, int * restrict, float * restrict);
-
-int degils(int,int,int,double * restrict, double *restrict, double * restrict, 
-    double * restrict, double *restrict, int, int * restrict, double * restrict);
-#endif
+/**
+ * @brief a probability mass function 
+ * @detail uses the lookup method
+ * @param n number of events
+ * @param p scaled probabilities (e.g., P(X = k) = p[k]/p_sum)
+ * @param p_sum sum of entries in p
+ *
+ * @return X sampled the given PMF
+ */
+unsigned int durngpmfs(int n,double *p,double p_sum)
+{
+    double u;
+    double tmp,q;
+    int k;
+    u = SURAND;
+    tmp = 0;
+    q = p_sum*u;
+    for (k=0;k<n;k++)
+    {
+        tmp += p[k];
+        if (tmp > q)
+        {
+            break;
+        }
+    }
+    return (k < n) ? k : n-1;
+}
