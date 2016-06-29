@@ -24,6 +24,8 @@
 #include <string.h>
 #include "cJSON.h"
 #include "SSAL_internal.h"
+
+
 /*error codes*/
 #define SSAL_SUCCESS                    0
 #define SSAL_INVALID_OPTION_ERROR       -1
@@ -44,18 +46,6 @@
     typedef float  SSAL_real_t;
 #endif
 
-
-/**@struct SSAL_Options_struct
- * @brief Contains user runtime configurable options
- */
-struct SSAL_Options_struct {
-    /**bitmask of algorithm types that are available for selection*/
-    uint8_t algOptions; 
-};
-
-typedef struct SSAL_Options_struct SSAL_Options;
-
-
 /**
  * @enum SSAL_AlgorithmType_enum
  * @brief Enumeration of the available Exact and Approximate algorithms
@@ -64,18 +54,15 @@ enum SSAL_AlgorithmType_enum {
     SSAL_ESSA_GILLESPIE_SEQUENTIAL,
     SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
     SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
-    SSAL_ASSA_TIME_DISCRETISE_SEQUENTIAL,
     SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL,
-    SSAL_ESSA_AUTO,
-    SSAL_ASSA_AUTO,
-    SSAL_RESTORE,
-    SSAL_INFO
+    SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL
 };
 /** type name for  SSAL_Algorithm_enum*/
 typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
 
 enum SSAL_ModelType_enum {
-    SSAL_CHEMICAL_REACTION_NETWORK
+    SSAL_CHEMICAL_REACTION_NETWORK,
+    SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION
 };
 /** type name for  SSAL_ModelType_enum*/
 typedef enum SSAL_ModelType_enum SSAL_ModelType;
@@ -121,6 +108,26 @@ struct SSAL_ChemicalReactionNetwork_struct {
 };
 /** type name for  SSAL_ChemicalReactionNetwork_struct*/
 typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
+
+/**
+ * @struct SSAL_StochasticDifferentialEquation_struct
+ * @brief general vector SDE of the form
+ *          dX_t = mu(X_t,t)dt + sigma(X_t,t)dW_t 
+ * where X_t \in R^N and W_t is a vector of N Wiener processes.
+ */
+struct SSAL_StochasticDifferentialEquation_struct {
+    /** Variable Names*/
+    char ** names;
+    /** number of equations */
+    uint32_t N;
+    /** drift function*/
+    void (*mu)(SSAL_real_t*,uint32_t,SSAL_real_t, SSAL_real_t*);
+    /** diffusion function */
+    void (*sigma)(SSAL_real_t*,uint32_t,SSAL_real_t,SSAL_real_t*);
+    /** initial conditions*/
+    SSAL_real_t *X0;
+};
+typedef struct SSAL_StochasticDifferentialEquation_struct SSAL_StochasticDifferentialEquation;
 
 /**
  * @struct SSAL_Simulation_struct

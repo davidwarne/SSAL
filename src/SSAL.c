@@ -243,9 +243,78 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
 }
 
 /**
+ * @brief Safely creates a multivariate stochastic differential equation
+ * @detail checks inputs are valid and creates the SDE
+ *
+ * @param N the number of equations  
+ * @param mu function pointer to drift function
+ * @param sigma function pointer diffusion function
+ *
+ * @returns A Stochasti Differential Equation Structure
+ */
+SSAL_Model SSAL_StochasticDifferentialEquation(char ** names, int N, 
+                            void (*mu)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*), void (*sigma)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*))
+{
+    int i;
+    char * funcname;
+    char * nameArray;
+    SSAL_Model newModel;
+    SSAL_StochasticDifferentialEquation *newSDE;
+   
+   funcname = "SSAL_StochasticDifferentialEquation";
+   
+    /*build wrapper struct*/
+    newModel.type = SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION;
+    if ((newSDE = (SSAL_StochasticDifferentialEquation*)malloc(sizeof(SSAL_StochasticDifferentialEquation))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+   
+    newModel.model = (void *)newSDE;
+    
+    /*allocate memory*/
+    newSDE->N = (uint32_t)N;
+    
+    if ((nameArray = (char *)malloc(newSDE->N*SSAL_MAX_NAME_SIZE*sizeof(char))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((newSDE->names = (char **)malloc(newSDE->N*sizeof(char*)))== NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    
+    for (i=0;i<newSDE->N;i++)
+    {
+        newSDE->names[i] = nameArray + i*SSAL_MAX_NAME_SIZE;
+    }
+   
+    newSDE->mu = mu;
+    newSDE->sigma = sigma;
+    
+    for (i=0;i<newSDE->N;i++)
+    {
+        int j;
+        for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
+        {
+            newSDE->names[i][j] = names[i][j];
+            if (names[i][j] == '\0')
+            {
+                continue;
+            }
+        }
+        newSDE->names[i][SSAL_MAX_NAME_SIZE-1] = '\0';
+    }
+
+    /*all done, return the new model*/
+    return newModel;
+}
+
+/**
  * @brief write chemical reation network too file
  * @param stream the output stream
  * @param data a chemical reaction network
+ *
  */
 int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwork data)
 {
@@ -329,43 +398,6 @@ int SSAL_WriteChemicalReactionNetwork(FILE * stream ,SSAL_ChemicalReactionNetwor
     fprintf(stream,"]");
     fprintf(stream,"}");
     fprintf(stream,"}\n");
-    /*print species data*/
-    //fprintf(stream,"Chemical Species:\n");
-    //for (i=0;i<data.N;i++)
-    //{
-    //    fprintf(stream,"\tX[%d]: %s\n",i,data.names[i]);
-    //}
-
-    ///*print equations*/
-    //fprintf(stream,"Chemical Reactions:\n");
-    //fprintf(stream,"\t         c \n");
-    //fprintf(stream,"\t nu^-*X --> nu^+*X\n");
-    //fprintf(stream,"\tnu^- =\n");
-    //for (j=0;j<data.M;j++)
-    //{
-    //    fprintf(stream,"\t\t |");
-    //    for (i=0;i<data.N;i++)
-    //    {
-    //        fprintf(stream," %f",data.nu_minus[j*data.N + i]);
-    //    }
-    //    fprintf(stream," |\n");
-    //}
-    //fprintf(stream,"\tnu^+ =\n");
-    //for (j=0;j<data.M;j++)
-    //{
-    //    fprintf(stream,"\t\t |");
-    //    for (i=0;i<data.N;i++)
-    //    {
-    //        fprintf(stream," %f",data.nu_plus[j*data.N + i]);
-    //    }
-    //    fprintf(stream," |\n");
-    //}
-    //fprintf(stream,"Kinetic Reaction Rates:\n");
-    //for (i=0;i<data.M;i++)
-    //{
-    //    fprintf(stream,"\tc[%d] = %f\n",i,data.c[i]);
-    //}
-
     return SSAL_SUCCESS; 
 }
 
@@ -693,6 +725,19 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             newRS->output = (SSAL_real_t *)malloc((newRS->Nvar)*(newRS->NT)*(newRS->NR)*sizeof(SSAL_real_t));
         }
             break;
+        case SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION:
+        {
+            SSAL_StochasticDifferentialEquation *SDE;
+            SDE = (SSAL_StochasticDifferentialEquation *)model->model;
+            SSAL_VARS2INDS(newRS,SDE,newRS->varInd)        
+            /*initial conditions will be the initial chemical species copy numbers*/
+            newRS->IC = (SSAL_real_t *)malloc((SDE->N)*sizeof(SSAL_real_t));
+            for (i=0; i<(SDE->N); i++)
+            {
+                newRS->IC[i] = initCond[i];
+            }
+        }
+            break;
         default:
             SSAL_HandleError(SSAL_UNKNOWN_TYPE_ERROR,funcname, __LINE__,1,0,NULL);        
             break;
@@ -778,8 +823,19 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
                 newEVS->IC[i] = initCond[i];
             }
 
-            newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
-            newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
+        }
+            break;
+        case SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION:
+        {
+            SSAL_StochasticDifferentialEquation *SDE;
+            SDE = (SSAL_StochasticDifferentialEquation *)model->model;
+            SSAL_VARS2INDS(newEVS,SDE,newEVS->varInd)        
+            /*initial conditions will be the initial chemical species copy numbers*/
+            newEVS->IC = (SSAL_real_t *)malloc((SDE->N)*sizeof(SSAL_real_t));
+            for (i=0; i<(SDE->N); i++)
+            {
+                newEVS->IC[i] = initCond[i];
+            }
         }
             break;
         default:
@@ -787,6 +843,8 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
                             __LINE__,1,0,NULL);        
             break;
     }
+    newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
+    newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
     
     return newSim;
 }
@@ -808,6 +866,9 @@ int SSAL_Simulate(SSAL_Simulation *sim, SSAL_AlgorithmType alg, const char * arg
     {   
         case SSAL_CHEMICAL_REACTION_NETWORK:
             rc = SSAL_SimulateCRN(sim,alg,args);
+            break;
+        case SSAL_CHEMICAL_REACTION_NETWORK:
+            rc = SSAL_SimulateSDE(sim,alg,args);
             break;
         default:
             break;
@@ -842,6 +903,47 @@ int SSAL_SimulateCRN(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
             break;
         case SSAL_EXPECTEDVALUE:
             rc = SSAL_SimulateCRNExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
+            break;
+        default:
+            break;
+    }
+    /*the first pointer is a pointer to the whole array*/
+    if (argv != NULL)
+    {
+        free(argv[0]);
+        free(argv);
+    }
+    return rc;
+}
+
+/**
+ * @brief Run a realisation simulation
+ * @param sim a Realisation simulation structure
+ * @param alg the selected algorithm type
+ * @param args algorithm specific args
+ */
+int SSAL_SimulateSDE(SSAL_Simulation *sim, SSAL_AlgorithmType alg, 
+                        const char *args)
+{
+    int argc;
+    char **argv;
+    int rc;
+    if (args == NULL)
+    {
+        argc = 0;
+        argv = NULL;
+    }
+    else
+    {
+        argv = SSAL_UtilTokeniseArgs(&argc,args);
+    }
+    switch (sim->type)
+    {
+        case SSAL_REALISATIONS:
+            rc = SSAL_SimulateSDERealisations(sim->sim,sim->model->model,alg,argc,argv);
+            break;
+        case SSAL_EXPECTEDVALUE:
+            rc = SSAL_SimulateSDEExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
             break;
         default:
             break;
@@ -928,7 +1030,48 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
     }
 
 }
- 
+
+/**
+ * @brief run a realisation simulation on a SDE model
+ * @param sim a Realisation Simulation structure
+ * @param model an SDE model
+ * @param alg the selected algorithm type
+ * @param argc the number of args
+ * @param argv input ags
+ */
+int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim, 
+            SSAL_StochasticDifferentialEquation *model, SSAL_AlgorithmType alg, int argc, char ** argv)
+{
+    int j,i;
+    SSAL_real_t * X_rj;
+
+    X_rj = sim->output;
+    /*algorithm selector*/ 
+    switch(alg)
+    {
+        case SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL:
+        {
+            SSAL_real_t h;
+            h = (SSAL_real_t)atof(SSAL_GetArg("--h",argc,argv));
+            for (j=0;j<sim->NR;j++)
+            {
+#ifdef __FLOAT64__
+                daems(model->N,sim->NT,sim->T,sim->IC,model->mu,model->sigma
+                    ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
+#else
+                saems(model->N,sim->NT,sim->T,sim->IC,model->mu,model->sigma
+                    ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
+#endif
+            }
+        }
+            break;
+        default:
+            break;
+    }
+
+}
+
+
  /**
  * @brief Compute Expected value on a Chemical Reaction Network model
  * @param sim an Expected Value Simulation structure
@@ -1093,6 +1236,101 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
     free(V_X);
 }
  
+ /**
+ * @brief Compute Expected value on a SDE model
+ * @param sim an Expected Value Simulation structure
+ * @param model a SDE model
+ * @param alg the selected algorithm type
+ * @param argc the number of args
+ * @param argv input ags
+ */
+int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *sim, 
+            SSAL_StochasticDifferentialEquation *model, SSAL_AlgorithmType alg, int argc, char ** argv)
+{
+    int j,i;
+    SSAL_real_t * X_r;
+    SSAL_real_t * E_X;
+    SSAL_real_t * V_X;
+
+
+    X_r = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
+    E_X = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
+    V_X = (SSAL_real_t *)malloc(sim->NT*sim->Nvar*sizeof(SSAL_real_t));
+    for (i=0;i<sim->Nvar*sim->NT;i++)
+    {
+        E_X[i] = 0;
+    }
+    for (i=0;i<sim->Nvar*sim->NT;i++)
+    {
+        V_X[i] = 0;
+    }
+    /*algorithm selector*/ 
+    switch(alg)
+    {
+        case SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL:
+        {
+            SSAL_real_t h;
+            h = (SSAL_real_t)atof(SSAL_GetArg("--h",argc,argv));
+            
+            for (j=0;j<sim->NR;j++)
+            {
+#ifdef __FLOAT64__
+                daems(model->N,sim->NT,sim->T,sim->IC,
+                    model->a,nu,model->b,sim->Nvar,sim->varInd,h,X_r);
+#else
+                saems(model->N,sim->NT,sim->T,sim->IC,
+                    model->a,nu,model->b,sim->Nvar,sim->varInd,h,X_r);
+#endif
+                for (i=0;i<sim->Nvar*sim->NT;i++)
+                {
+                    E_X[i] += (double)X_r[i];
+                }
+                for (i=0;i<sim->Nvar*sim->NT;i++)
+                {
+                    V_X[i] +=(double)( X_r[i]*X_r[i]);
+                }
+            }
+
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                E_X[i] /= (SSAL_real_t)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (SSAL_real_t)(sim->NR);
+            }
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] -= E_X[i]*E_X[i];
+            }
+        
+            /*convert variance in X to variance in the mean esitmator
+             * i.e., Var[E[X(T)]] = Var[X]/n
+             */
+            for (i=0;i<sim->Nvar*sim->NT;i++)
+            {
+                V_X[i] /= (SSAL_real_t)(sim->NR);
+            }
+
+
+        }
+            break;
+        default:
+            break;
+    }
+
+    
+    for (i=0;i<sim->Nvar*sim->NT;i++)
+    {
+        sim->E[i] =  E_X[i];
+        sim->V[i] =  V_X[i];
+    }
+
+    free(X_r);
+    free(E_X);
+    free(V_X);
+}
+
 
 /**
  * @brief utilitiy function which breaks a char array into a array of char arrays

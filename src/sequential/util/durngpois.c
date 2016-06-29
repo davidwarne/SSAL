@@ -16,7 +16,7 @@
  */
 
 #include "util_sequential.h"
-
+#include <stdio.h>
 /**
  * @brief single precision Poisson random variates generator
  * @detail For small lambda Donald Knuth's method is used

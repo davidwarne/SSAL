@@ -18,20 +18,22 @@
 #include "util_sequential.h"
 
 /**
- * @define generates a exponential random variate
- * @define uses the inverse transform method
- * @param lambda the distribution parameter 
+ * @define generates a normal random variate
+ * @define uses the Box-Muller method
+ * @param mu the mean
+ * @param sigma the standard deviation
  *
- * @returns X ~ Exp(lambda)
+ * @returns X ~ N(mu,sigma)
  */
-double durngexps(double lambda)
+float surngns(float mu,float sigma)
 {
-    int i;
 #if defined(__MKL__)
 #elif defined(__GSL__)
 #else
-    double u;
-    u = DURAND;
-    return -log(u)/lambda;
+    float u1,u2;
+    u1 = SURAND;
+    u2 = SURAND;
+    return sigma*sqrtf(-2.0*logf(u1))*cosf(2.0*M_PI*u2);
 #endif
 }
+

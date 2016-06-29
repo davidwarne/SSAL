@@ -21,8 +21,8 @@ SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c
 OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)
-INC = -I ./include/ 
-LIBS = -lm
+INC = -I ./include/  
+LIBS = -lm -lgsl -lgslcblas
 
 LIBDIR = lib
 STATIC = $(LIBDIR)/lib$(NAME).a

@@ -18,7 +18,7 @@
 #include "util_sequential.h"
 
 /**
- * @detail Single precision tau-leap method
+ * @detail tau-leap method
  * @detail An approximate stochastic simulation algorithm in which a continuous time
  * markov process is discretised in time
  *
