@@ -18,8 +18,8 @@
 #include "util_sequential.h"
 
 /**
- * @define generates a normal random variate
- * @define uses the Box-Muller method
+ * @brief generates a normal random variate
+ * @details uses the Box-Muller method
  * @param mu the mean
  * @param sigma the standard deviation
  *

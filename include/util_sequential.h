@@ -81,6 +81,9 @@ int duhzds(int ,int ,double * restrict, double *, double * restrict, double * re
 float surngns(float, float);
 double durngns(double, double);
 
+/* multi-variate normal distribution*/
+void durngmvns(int , double * restrict, double * restrict , double * restrict , double * restrict );
+
 /*empirical MLMC optimal sample size estimation*/
 int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
     float * restrict, float, int, int, float, int, int * restrict, 
