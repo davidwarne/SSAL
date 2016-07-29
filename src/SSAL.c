@@ -243,10 +243,6 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
         for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
         {
             newCRN->names[i][j] = names[i][j];
-            if (names[i][j] == '\0')
-            {
-                continue;
-            }
         }
         newCRN->names[i][SSAL_MAX_NAME_SIZE-1] = '\0';
     }
@@ -259,14 +255,16 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
  * @brief Safely creates a multivariate stochastic differential equation
  * @detail checks inputs are valid and creates the SDE
  *
- * @param N the number of equations  
+ * @param M the number of parameters  
+ * @param N  the number of equations  
  * @param mu function pointer to drift function
  * @param sigma function pointer diffusion function
+ * @param p model parameter vector
  *
  * @returns A Stochasti Differential Equation Structure
  */
-SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int N, 
-                            void (*mu)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*), void (*sigma)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*))
+SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int M, int N, 
+                            void (*mu)(SSAL_real_t *, uint32_t, SSAL_real_t*, uint32_t, SSAL_real_t,SSAL_real_t*), void (*sigma)(SSAL_real_t *, uint32_t, SSAL_real_t*, uint32_t, SSAL_real_t,SSAL_real_t*), SSAL_real_t *p)
 {
     int i;
     char * funcname;
@@ -287,6 +285,7 @@ SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int N,
     
     /*allocate memory*/
     newSDE->N = (uint32_t)N;
+    newSDE->M = (uint32_t)M;
     
     if ((nameArray = (char *)malloc(newSDE->N*SSAL_MAX_NAME_SIZE*sizeof(char))) == NULL)
     {
@@ -301,6 +300,16 @@ SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int N,
     {
         newSDE->names[i] = nameArray + i*SSAL_MAX_NAME_SIZE;
     }
+
+    if ((newSDE->p = (SSAL_real_t *)malloc(newSDE->M*sizeof(SSAL_real_t))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+
+    for (i=0;i<newSDE->M;i++)
+    {
+       newSDE->p[i] = p[i]; 
+    }
    
     newSDE->mu = mu;
     newSDE->sigma = sigma;
@@ -311,10 +320,6 @@ SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int N,
         for (j=0;j<SSAL_MAX_NAME_SIZE-1;j++)
         {
             newSDE->names[i][j] = names[i][j];
-            if (names[i][j] == '\0')
-            {
-                continue;
-            }
         }
         newSDE->names[i][SSAL_MAX_NAME_SIZE-1] = '\0';
     }
@@ -836,6 +841,8 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
             {
                 newEVS->IC[i] = initCond[i];
             }
+            newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
+            newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
 
         }
             break;
@@ -850,6 +857,8 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
             {
                 newEVS->IC[i] = initCond[i];
             }
+            newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
+            newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
         }
             break;
         default:
@@ -857,8 +866,6 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
                             __LINE__,1,0,NULL);        
             break;
     }
-    newEVS->E = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
-    newEVS->V = (SSAL_real_t *)malloc((newEVS->Nvar)*(newEVS->NT)*sizeof(SSAL_real_t));
     
     return newSim;
 }
@@ -1073,10 +1080,10 @@ int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
 #ifdef __FLOAT64__
-                daems(model->N,sim->NT,sim->T,sim->IC,model->mu,model->sigma
+                daems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma
                     ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
 #else
-                saems(model->N,sim->NT,sim->T,sim->IC,model->mu,model->sigma
+                saems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma
                     ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
 #endif
             }
@@ -1295,10 +1302,10 @@ int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *sim,
             for (j=0;j<sim->NR;j++)
             {
 #ifdef __FLOAT64__
-                daems(model->N,sim->NT,sim->T,sim->IC,
+                daems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,
                     model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
 #else
-                saems(model->N,sim->NT,sim->T,sim->IC,
+                saems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,
                     model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
 #endif
                 for (i=0;i<sim->Nvar*sim->NT;i++)

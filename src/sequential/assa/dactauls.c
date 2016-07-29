@@ -35,7 +35,7 @@
  * @param c kinetic reaction rates
  * @param ndims number of dimensions to measure 
  * @param dims vector of dimesnion indices indicating those to be mesured
- * @param tau coarse-grain level time-step fine-grain is tau/M;
+ * @param tau fine-grain level time-step coarse-grain is tau*M;
  * @param M nesting factor
  * @param Z_l_r realisation of Z_l(t)
  * @param Z_lm1_r realisation of Z_{l-1}(t) with strong correlation to Z_l(t)
@@ -75,7 +75,7 @@ int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
 
     for (ti=0;ti<nt;ti++)
     {
-        for (;t<=T[ti];t+=tau_lm1)
+        for (;t <=T[ti];t+=tau_lm1)
         {
             /*compute coarse propensities*/
             duhzds(m,n,nu_minus,c,Z_c,a_c);

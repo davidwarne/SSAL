@@ -35,12 +35,12 @@
 
 /* dX_t = -X_t dt + 0.3 dW_t*/
 
-void mu(SSAL_real_t *X, unsigned int n, SSAL_real_t t, SSAL_real_t* mur){
+void mu(SSAL_real_t *X, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* mur){
     mur[0] = -X[0];
 }
 
-void sigma(SSAL_real_t *X, unsigned int n, SSAL_real_t t, SSAL_real_t* sigr){
-    sigr[0] = 0.3;
+void sigma(SSAL_real_t *X, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* sigr){
+    sigr[0] = params[0]; /*only one parameter*/
 }
 
 
@@ -53,13 +53,17 @@ int main(int argc , char ** argv)
     SSAL_real_t dt;
     SSAL_real_t *T;
     SSAL_real_t *X0;
+    SSAL_real_t *X_f_r;
+    SSAL_real_t *X_c_r;
+    SSAL_real_t sig;
+    int d;
     char ** names;
-
+    d = 0;
     //int model;
     int type;
     char opts[256];
     int m,n;
-
+    sig = 0.3;
     names = (char **)malloc(sizeof(char *));
     names[0] = "X";
 
@@ -81,13 +85,16 @@ int main(int argc , char ** argv)
     }
 
     
+    X_f_r = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
+    X_c_r = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
 
     /*init SSAL */
     SSAL_Initialise(argc,argv);
-    /*build SDE model*/
-    SDE = SSAL_CreateStochasticDifferentialEquation(names,1,&mu,&sigma);
+//    /*build SDE model*/
+    SDE = SSAL_CreateStochasticDifferentialEquation(names,1,1,&mu,&sigma,&sig);
     SDE_ptr = (SSAL_StochasticDifferentialEquation *)SDE.model;
-    X0[0] = 2; 
+     X0[0] = 2; 
+//     dacems(1,1,NT,T,&sig,X0,&mu,&sigma,1,&d,h,2,X_f_r,X_c_r);
     SDE_ptr->X0 = X0;
     names = SDE_ptr->names;
     n = SDE_ptr->N;
@@ -103,5 +110,10 @@ int main(int argc , char ** argv)
     SSAL_Simulate(&sim,algType,opts);
     /*write the data*/
     SSAL_WriteSimulation(stdout,sim);
+
+//    for (i=0;i<NT;i++)
+//    {
+//        fprintf(stdout,"%f %f %f\n", T[i],X_f_r[i],X_c_r[i]);
+//    }
     return 0;
 }

@@ -121,11 +121,18 @@ struct SSAL_StochasticDifferentialEquation_struct {
     char ** names;
     /** number of equations */
     uint32_t N;
+    /** number of parameters */
+    uint32_t M;
     /** drift function*/
-    void (*mu)(SSAL_real_t*,uint32_t,SSAL_real_t, SSAL_real_t*);
+    void (*mu)(SSAL_real_t*,uint32_t, SSAL_real_t*, uint32_t, SSAL_real_t, SSAL_real_t*);
     /** diffusion function */
-    void (*sigma)(SSAL_real_t*,uint32_t,SSAL_real_t,SSAL_real_t*);
-    /** initial conditions*/
+    void (*sigma)(SSAL_real_t*,uint32_t,SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*);
+    /**@todo add corvariance matrix support for true multi-variate SDE
+     * currently only SDE's driven by independent standard Brownian motions are supported
+     */    
+    /** parameter vector */
+    SSAL_real_t *p;
+    /** default initial conditions*/
     SSAL_real_t *X0;
 };
 typedef struct SSAL_StochasticDifferentialEquation_struct SSAL_StochasticDifferentialEquation;
@@ -275,9 +282,9 @@ int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 /*         Stochastic Differential Equation API                     */
 /*==================================================================*/
 /* SDE structures and functions*/
-SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** , int ,
-          void (*)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*),
-          void (*)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*));
+SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** , int, int ,
+          void (*)(SSAL_real_t *, uint32_t,SSAL_real_t*, uint32_t, SSAL_real_t,SSAL_real_t*),
+          void (*)(SSAL_real_t *, uint32_t,SSAL_real_t*,uint32_t, SSAL_real_t,SSAL_real_t*), SSAL_real_t *);
 
 int SSAL_SimulateSDE(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *, 

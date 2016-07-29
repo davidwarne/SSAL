@@ -29,19 +29,21 @@
  * The Euler-Maruyama approximation is
  *  X(t + h) = a(X(t),t)h + b(X(t),t)N(0,sqrt(h))
  *
+ * @param m number of parameters
  * @param n dimension of X
  * @param nt numbe of timesteps to sample
  * @param T an array of length nt of sample times
+ * @param p vector of model parameters
  * @param X0 the initial condition
  * @param a function pointer for the drift coefficient
  * @param b a function pointer for the diffusion coefficient
- * @param ndims numebr dimension to measure
+ * @param ndims number dimension to measure
  * @param dims the dimensions indices 
  * @param h the discrete timestep parameter
  * @param X_r state-space trajectory for measured dims (nt*ndims)
  * 
  */
-int daems(int n, int nt, double * restrict T, double * restrict X0, void (*a)(double *, unsigned int, double,double *), void (*b)(double*,unsigned int,double,double*),int ndims, int *restrict dims, double h, double *restrict X_r)
+int daems(int m,int n, int nt, double * restrict T, double * restrict p, double * restrict X0, void (*a)(double *, unsigned int, double *, unsigned int,  double,double *), void (*b)(double*,unsigned int, double *, unsigned int, double,double*),int ndims, int *restrict dims, double h, double *restrict X_r)
 {
     double X[n]; /*current state*/
     double ar[n]; /* return values of drift function*/
@@ -68,8 +70,8 @@ int daems(int n, int nt, double * restrict T, double * restrict X0, void (*a)(do
             }
             
             /*evaluate drift and diffusion*/
-            (*a)(X,n,t,ar);
-            (*b)(X,n,t,br);
+            (*a)(X,n,p,m,t,ar);
+            (*b)(X,n,p,m,t,br);
 
             /*step in time*/
             for (i=0;i<n;i++)
