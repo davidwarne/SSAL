@@ -77,6 +77,10 @@ unsigned int durngpois(double);
 int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restrict);
 int duhzds(int ,int ,double * restrict, double *, double * restrict, double * restrict);
 
+/* normal distribution*/
+float surngns(float, float);
+double durngns(double, double);
+
 /*empirical MLMC optimal sample size estimation*/
 int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
     float * restrict, float, int, int, float, int, int * restrict, 

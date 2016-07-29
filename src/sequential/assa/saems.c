@@ -41,22 +41,21 @@
  * @param X_r state-space trajectory for measured dims (nt*ndims)
  * 
  */
-int daems(int n, int nt, double * restrict T, double * restrict X0, void (*a)(double *, unsigned int, double,double *), void (*b)(double*,unsigned int,double,double*),int ndims, int *restrict dims, double h, double *restrict X_r)
+int saems(int n, int nt, float * restrict T, float * restrict X0, void (*a)(float *,unsigned int, float,float *), void (*b)(float*,unsigned int,float,float*),int ndims, int *restrict dims, float h, float *restrict X_r)
 {
-    double X[n]; /*current state*/
-    double ar[n]; /* return values of drift function*/
-    double br[n]; /* return values of the diffusion function*/
-    double t=0;
-    double deltaW[n]; /*brownian increment*/
-    double sqrth;
-    int i,ti;
-
+    float X[n]; /*current state*/
+    float ar[n]; /* return values of drift function*/
+    float br[n]; /* return values of the diffusion function*/
+    float t=0;
+    float deltaW[n]; /*brownian increment*/
+    float sqrth;
+    int i,ti; 
     for (i=0;i<n;i++)
     {
         X[i] = X0[i];
     }
     
-    sqrth = sqrt(h);
+    sqrth = sqrtf(h);
     for (ti=0;ti<nt;ti++)
     {
         for (;t <= (T[ti] -h ); t+=h)
@@ -64,7 +63,7 @@ int daems(int n, int nt, double * restrict T, double * restrict X0, void (*a)(do
             /*compute brownian increments*/
             for (i=0;i<n;i++)
             {
-                deltaW[i] = durngns(0,sqrth);
+                deltaW[i] = surngns(0,sqrth);
             }
             
             /*evaluate drift and diffusion*/

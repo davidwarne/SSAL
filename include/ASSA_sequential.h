@@ -47,4 +47,9 @@ int samlmcbs(int ,int , int , float * restrict , float * restrict , float * rest
 int damlmcbs(int ,int , int , double * restrict , double * restrict , double * restrict ,
     double * restrict , double * restrict , double , int , int , double, 
     int,int * restrict , int (*)(int,double *, double *), double * restrict , double * restrict );
+
+/* Euler-Maruyama Method*/
+int saems(int , int , float * restrict , float * restrict , void (*)(float *, unsigned int, float,float *), void (*)(float*,unsigned int,float,float*),int , int *restrict , float , float *restrict );
+
+int daems(int , int , double * restrict , double * restrict , void (*)(double *, unsigned int, double,double *), void (*)(double*, unsigned int,double,double*),int , int *restrict , double , double *restrict );
 #endif

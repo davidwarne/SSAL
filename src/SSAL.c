@@ -52,6 +52,9 @@ void SSAL_HandleError(int errCode, char * funcName, int lineNum, unsigned char f
             errName = "SSAL_UNKNOWN_OPTION_ERROR";
             defaultMsg = "A configuration option was not recognised.";
             break;
+        case SSAL_UNSUPPORTED_ALGORITHM_ERROR:
+            errName = "SSAL_UNSUPPORTED_ALGORITHM_ERROR";
+            defaultMsg = "The selected simulation algorithm is not supported for this model.";
         default:
             errName = "SSAL_UNKNOWN_ERROR";
             defaultMsg = "No idea what happened then...";
@@ -102,6 +105,7 @@ void SSAL_HandleError(int errCode, char * funcName, int lineNum, unsigned char f
 int SSAL_Initialise(int argc,char **argv)
 {
     int i;
+    unsigned char infoflag;
     unsigned int seed;
     seed = 1337;
     /*search for config options*/
@@ -123,6 +127,10 @@ int SSAL_Initialise(int argc,char **argv)
         {
             seed = (unsigned int)atoi(argv[++i]);          
         }
+        else if (!strcmp("--info",argv[i]))
+        {
+            infoflag = 1;
+        }
         else
         {
             SSAL_HandleError(SSAL_UNKNOWN_OPTION_ERROR,"SSAL_Initialise",__LINE__,0,1,argv[i]);
@@ -133,6 +141,11 @@ int SSAL_Initialise(int argc,char **argv)
     #ifdef __SERIAL__
        suarngs(seed,NULL,NULL);
     #endif
+    if (infoflag)
+    {
+        fprintf(stderr,"RNG Seed: %d\n",seed);
+        fprintf(stderr,"RNG RAND_MAX: %d\n",RAND_MAX);
+    }
 }
 
 
@@ -252,7 +265,7 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
  *
  * @returns A Stochasti Differential Equation Structure
  */
-SSAL_Model SSAL_StochasticDifferentialEquation(char ** names, int N, 
+SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** names, int N, 
                             void (*mu)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*), void (*sigma)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*))
 {
     int i;
@@ -261,7 +274,7 @@ SSAL_Model SSAL_StochasticDifferentialEquation(char ** names, int N,
     SSAL_Model newModel;
     SSAL_StochasticDifferentialEquation *newSDE;
    
-   funcname = "SSAL_StochasticDifferentialEquation";
+   funcname = "SSAL_CreateStochasticDifferentialEquation";
    
     /*build wrapper struct*/
     newModel.type = SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION;
@@ -730,12 +743,13 @@ SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *model, int N,char **obs, 
             SSAL_StochasticDifferentialEquation *SDE;
             SDE = (SSAL_StochasticDifferentialEquation *)model->model;
             SSAL_VARS2INDS(newRS,SDE,newRS->varInd)        
-            /*initial conditions will be the initial chemical species copy numbers*/
+            /*initial conditions will be the initial */
             newRS->IC = (SSAL_real_t *)malloc((SDE->N)*sizeof(SSAL_real_t));
             for (i=0; i<(SDE->N); i++)
             {
                 newRS->IC[i] = initCond[i];
             }
+            newRS->output = (SSAL_real_t *)malloc((newRS->Nvar)*(newRS->NT)*(newRS->NR)*sizeof(SSAL_real_t));
         }
             break;
         default:
@@ -830,7 +844,7 @@ SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *model, int N,char **obs,
             SSAL_StochasticDifferentialEquation *SDE;
             SDE = (SSAL_StochasticDifferentialEquation *)model->model;
             SSAL_VARS2INDS(newEVS,SDE,newEVS->varInd)        
-            /*initial conditions will be the initial chemical species copy numbers*/
+            /*initial conditions will be the initial value*/
             newEVS->IC = (SSAL_real_t *)malloc((SDE->N)*sizeof(SSAL_real_t));
             for (i=0; i<(SDE->N); i++)
             {
@@ -867,7 +881,7 @@ int SSAL_Simulate(SSAL_Simulation *sim, SSAL_AlgorithmType alg, const char * arg
         case SSAL_CHEMICAL_REACTION_NETWORK:
             rc = SSAL_SimulateCRN(sim,alg,args);
             break;
-        case SSAL_CHEMICAL_REACTION_NETWORK:
+        case SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION:
             rc = SSAL_SimulateSDE(sim,alg,args);
             break;
         default:
@@ -946,6 +960,7 @@ int SSAL_SimulateSDE(SSAL_Simulation *sim, SSAL_AlgorithmType alg,
             rc = SSAL_SimulateSDEExpectedValue(sim->sim,sim->model->model,alg,argc,argv);
             break;
         default:
+            
             break;
     }
     /*the first pointer is a pointer to the whole array*/
@@ -1008,6 +1023,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
             }
         }
             break;
+        case SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL:
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
         {
             SSAL_real_t tau;
@@ -1026,6 +1042,7 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
         }
             break;
         default:
+            SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
             break;
     }
 
@@ -1066,6 +1083,7 @@ int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim,
         }
             break;
         default:
+            SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
             break;
     }
 
@@ -1155,6 +1173,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
 
         }
             break;
+        case SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL:
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
         {
             SSAL_real_t tau;
@@ -1221,6 +1240,7 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
         }
             break;
         default:
+            SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
             break;
     }
 
@@ -1276,10 +1296,10 @@ int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *sim,
             {
 #ifdef __FLOAT64__
                 daems(model->N,sim->NT,sim->T,sim->IC,
-                    model->a,nu,model->b,sim->Nvar,sim->varInd,h,X_r);
+                    model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
 #else
                 saems(model->N,sim->NT,sim->T,sim->IC,
-                    model->a,nu,model->b,sim->Nvar,sim->varInd,h,X_r);
+                    model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
 #endif
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
@@ -1316,6 +1336,7 @@ int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *sim,
         }
             break;
         default:
+            SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
             break;
     }
 

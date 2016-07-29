@@ -34,6 +34,7 @@
 #define SSAL_UNKNOWN_TYPE_ERROR         -4
 #define SSAL_MEMORY_ERROR               -5
 #define SSAL_UNSUPPORTED_ERROR          -6
+#define SSAL_UNSUPPORTED_ALGORITHM_ERROR -7
 
 /*option codes*/
 #define SSAL_MAX_NAME_SIZE      128
@@ -227,6 +228,10 @@ typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
 
 /* function prototypes*/
 
+/*==================================================================*/
+/*           SSAL Generic API Functions                             */
+/*==================================================================*/
+
 /*initialisation an error handling*/
 void SSAL_InitRNGS(unsigned int *, int);
 
@@ -234,30 +239,52 @@ void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *);
 
 int SSAL_Initialise(int,char **); 
 
-/*object creation*/
-SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
-                            SSAL_real_t * restrict , SSAL_real_t * restrict , SSAL_real_t * restrict );
+/* generic wrapper functions*/
+SSAL_Model SSAL_ImportLSBML(const char * );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 SSAL_real_t *, SSAL_real_t * );
 SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *,int, char **, int, int, 
                                 SSAL_real_t*, SSAL_real_t * );
+
 /* simulation and operations*/
 int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
+/*output*/
+int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
+int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
+int SSAL_WriteExpectedValueSim(FILE *, SSAL_ExpectedValueSimulation *);
 
+
+/*==================================================================*/
+/*         Chemical Reaction Network API                            */
+/*==================================================================*/
+
+/*object creation*/
+SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
+                            SSAL_real_t * restrict , SSAL_real_t * restrict , SSAL_real_t * restrict );
+
+/* Chemical Reaction Network structures and functions*/
 int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
 int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType , int , char **);
 
-/*output*/
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
-int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
-int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
-int SSAL_WriteExpectedValueSim(FILE *, SSAL_ExpectedValueSimulation *);
 
-/*input*/
-SSAL_Model SSAL_ImportLSBML(const char * );
+/*==================================================================*/
+/*         Stochastic Differential Equation API                     */
+/*==================================================================*/
+/* SDE structures and functions*/
+SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** , int ,
+          void (*)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*),
+          void (*)(SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*));
+
+int SSAL_SimulateSDE(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
+int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *, 
+            SSAL_StochasticDifferentialEquation *, SSAL_AlgorithmType,  int, char **);
+int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *, 
+            SSAL_StochasticDifferentialEquation *, SSAL_AlgorithmType , int , char **);
+
 
 /*utilities*/
 char** SSAL_UtilTokeniseArgs(int *,const char *);
