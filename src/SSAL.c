@@ -1089,9 +1089,35 @@ int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim,
             }
         }
             break;
+        case SSAL_ASSA_EULER_MARUYAMA_CORRELATED_SEQUENTIAL:
+        {
+            SSAL_real_t h_f;
+            int32_t M;
+            h_f = (SSAL_real_t)atof(SSAL_GetArg("--h",argc,argv));
+            M = (int32_t)atoi(SSAL_GetArg("--M",argc,argv));
+            if ((sim->NR)%2 != 0)
+            {
+                    SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
+                    return 1;
+            }
+            else
+            {
+                for (j=0;j<sim->NR;j+=2)
+                {
+
+#ifdef __FLOAT64__
+                    dacems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma,sim->Nvar,sim->varInd,h_f,M,X_rj + j*(sim->NT*sim->Nvar),X_rj + (j+1)*(sim->NT*sim->Nvar));
+#else
+                    SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
+                    return 1;
+#endif
+                }
+            }
+        }
+            break;
         default:
             SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
-            break;
+            return 1;
     }
 
 }

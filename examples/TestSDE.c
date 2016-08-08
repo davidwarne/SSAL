@@ -101,11 +101,11 @@ int main(int argc , char ** argv)
     for(i=0;i<SDE_ptr->N;i++)
         fprintf(stderr,"%s\n",names[i]);
     /* build realisation simulation */
-    sim = SSAL_CreateRealisationsSim(&SDE,n,NULL,NR,NT,T,X0);
+    sim = SSAL_CreateRealisationsSim(&SDE,n,NULL,NR*2,NT,T,X0);
 
     free(T);
-    algType = SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL; 
-    sprintf(opts,"--h %f",h);
+    algType = SSAL_ASSA_EULER_MARUYAMA_CORRELATED_SEQUENTIAL; 
+    sprintf(opts,"--h %f --M %d",h,2);
     /*simulate realisations*/
     SSAL_Simulate(&sim,algType,opts);
     /*write the data*/
