@@ -21,17 +21,12 @@
  * @brief single precision Poisson random variates generator
  * @detail For small lambda Donald Knuth's method is used
  * otherwise the method proposed by Atkinson is used. 
- * If compiled with GSL or MKL then those libraries are utilised
  */
 unsigned int durngpois(double lambda)
 {
     int i;
-#if defined(__MKL__)
-#elif defined(__GSL__)
-    return gsl_ran_poisson(__UTIL_sRNG.r,(double)lambda[i]);
-#else
-   if (lambda < 30.0)
-   {
+    if (lambda < 30.0)
+    {
        double L;
        int k;
        double p;
@@ -76,5 +71,4 @@ unsigned int durngpois(double lambda)
            }
        }
    }
-#endif
 }

@@ -27,13 +27,9 @@
  */
 float surngns(float mu,float sigma)
 {
-#if defined(__MKL__)
-#elif defined(__GSL__)
-#else
     float u1,u2;
     u1 = SURAND;
     u2 = SURAND;
     return sigma*sqrtf(-2.0*logf(u1))*cosf(2.0*M_PI*u2);
-#endif
 }
 

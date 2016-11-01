@@ -27,13 +27,9 @@
  */
 double durngns(double mu,double sigma)
 {
-#if defined(__MKL__)
-#elif defined(__GSL__)
-#else
     double u1,u2;
     u1 = DURAND;
     u2 = DURAND;
-    return sigma*sqrt(-2.0*log(u1))*cos(2.0*M_PI*u2);
-#endif
+    return sigma*sqrt(-2.0*log(u1))*cos(2.0*M_PI*u2)+mu;
 }
 

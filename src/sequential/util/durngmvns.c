@@ -29,9 +29,6 @@
  */
 void durngmvns(int d, double * restrict mu, double * restrict lambda, double * restrict Z, double * restrict X)
 {
-#if defined(__MKL__)
-#elif defined(__GSL__)
-#else
     double u1,u2,r,t;
     int i,j;
     for (i=0;i<(d-1);i+=2)
@@ -81,5 +78,4 @@ void durngmvns(int d, double * restrict mu, double * restrict lambda, double * r
             X[i] += mu[i];
         }
     }
-#endif
 }

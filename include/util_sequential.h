@@ -21,6 +21,12 @@
 #include <math.h>
 #include <stdlib.h>
 
+#if defined(__MKL__)
+    #include <mkl.h>
+    #include <mkl_vsl.h>
+    #define RNG_BLOCK_SIZE 1000
+#endif
+
 #define ONE_ON_RAND_MAX (1.0/((float)RAND_MAX))
 
 
@@ -34,6 +40,11 @@
  */
 struct sRNG_struct {
 #if defined(__MKL__)
+    unsigned int seed;
+    VSLStreamStatePtr stream;
+    MKL_INT brng;
+    double dbuf[RNG_BLOCK_SIZE];
+    int ind; 
 #elif defined(__GSL__)
     /**seed value*/
     unsigned int seed;
@@ -50,10 +61,13 @@ struct sRNG_struct {
     int (*U)(void);
 };
 typedef struct sRNG_struct sRNG;
-
+#if defined(__MKL__)
+#define SURAND ((float)__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
+#define DURAND (__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
+#else
 #define SURAND (((float)(*(__UTIL_sRNG.U))())/((float)RAND_MAX))
 #define DURAND (((double)(*(__UTIL_sRNG.U))())/((double)RAND_MAX))
-
+#endif
 /** a global list of RNG streams */
 extern sRNG __UTIL_sRNG;
 

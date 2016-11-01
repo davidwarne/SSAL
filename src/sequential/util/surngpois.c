@@ -26,10 +26,6 @@
 unsigned int surngpois(float lambda)
 {
     int i;
-#if defined(__MKL__)
-#elif defined(__GSL__)
-    return (float)gsl_ran_poisson(__UTIL_sRNG.r,(double)lambda[i]);
-#else
    if (lambda < 30.0)
    {
        float L;
@@ -76,5 +72,4 @@ unsigned int surngpois(float lambda)
            }
        }
    }
-#endif
 }

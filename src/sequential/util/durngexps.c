@@ -27,11 +27,7 @@
 double durngexps(double lambda)
 {
     int i;
-#if defined(__MKL__)
-#elif defined(__GSL__)
-#else
     double u;
     u = DURAND;
     return -log(u)/lambda;
-#endif
 }

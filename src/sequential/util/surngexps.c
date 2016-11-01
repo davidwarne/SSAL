@@ -27,12 +27,7 @@
 float surngexps(float lambda)
 {
     int i;
-#if defined(__MKL__)
-#elif defined(__GSL__)
-   return (float)gsl_ran_exponential(__UTIL_sRNG.r,(double)lambda[i]);
-#else
     float u;
     u = SURAND;
     return -logf(u)/lambda;
-#endif
 }

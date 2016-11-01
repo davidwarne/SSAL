@@ -1,8 +1,8 @@
 #!/bin/make
 
-CC = gcc
-#OPTS = -O2 -std=gnu99 -D__SERIAL__ 
-OPTS = -O2 -std=gnu99 -D__SERIAL__ -D__FLOAT64__ 
+CC = icc
+#OPTS = -O2 -D__SERIAL__ -D__FLOAT64__
+OPTS = -O2 -mkl=sequential -D__SERIAL__ -D__FLOAT64__ -D__MKL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ -D__FLOAT64__ 
 
@@ -22,9 +22,10 @@ OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)
 INC = -I ./include/  
-LIBS = -lm -lgsl -lgslcblas
+LIBS = -lm
 
 LIBDIR = lib
+#STATIC = $(LIBDIR)/lib$(NAME)_mkl.a
 STATIC = $(LIBDIR)/lib$(NAME).a
 AR = ar
 AROPTS = -rcvs

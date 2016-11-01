@@ -25,10 +25,5 @@
 double durngus(double a, double b)
 {
     int i;
-#if defined(__MKL__)
-#elif defined(__GSL__)
-    return (double) gsl_ran_flat(__UTIL_sRNG.r,(double)a,(double)b);
-#else
     return DURAND*(b - a) + a;
-#endif
 }

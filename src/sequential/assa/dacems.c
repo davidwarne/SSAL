@@ -74,6 +74,14 @@ int dacems(int m,int n, int nt, double * restrict T, double * p, double * restri
     {
         X_f[i] = X0[i];
     }
+    for (i=0;i<n;i++)
+    {
+        deltaW_c[i] = 0;
+    }
+    for (i=0;i<n;i++)
+    {
+        deltaW_f[i] = 0;
+    }
 
     t_c = 0;
     t_f = 0;
