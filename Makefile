@@ -15,9 +15,10 @@ IODIR=$(SRCDIR)/io
 UTILDIR=$(SRCDIR)/sequential/util
 ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
+ODEDIR=$(SRCDIR)/sequential/ode
 
 EXESRC = $(EXPDIR)/TestABC.c $(EXPDIR)/TestCRN.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c
-SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(ASSADIR)/samlmcbs.c $(ASSADIR)/sactauls.c $(ASSADIR)/saems.c $(UTILDIR)/sumlnls.c  $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c   $(UTILDIR)/surngns.c $(ESSADIR)/degils.c $(ASSADIR)/datauls.c $(ASSADIR)/damlmcbs.c $(ASSADIR)/dactauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/dumlnls.c  $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c
+SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(ESSADIR)/segils.c $(ASSADIR)/satauls.c $(ASSADIR)/samlmcbs.c $(ASSADIR)/sactauls.c $(ASSADIR)/saems.c $(UTILDIR)/sumlnls.c  $(UTILDIR)/suhzds.c $(UTILDIR)/suarngs.c $(UTILDIR)/surngus.c $(UTILDIR)/surngexps.c $(UTILDIR)/surngpmfs.c $(UTILDIR)/surngpois.c   $(UTILDIR)/surngns.c $(ESSADIR)/degils.c $(ASSADIR)/datauls.c $(ASSADIR)/damlmcbs.c $(ASSADIR)/dactauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/dumlnls.c  $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c $(ODEDIR)/drk4s.c $(ODEDIR)/srk4s.c
 OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)
@@ -25,8 +26,8 @@ INC = -I ./include/
 LIBS = -lm
 
 LIBDIR = lib
-#STATIC = $(LIBDIR)/lib$(NAME)_mkl.a
-STATIC = $(LIBDIR)/lib$(NAME).a
+#STATIC = $(LIBDIR)/lib$(NAME).a
+STATIC = $(LIBDIR)/lib$(NAME)_mkl.a
 AR = ar
 AROPTS = -rcvs
 #PROFILE = -g -pg

@@ -37,6 +37,7 @@
 #include "ESSA_sequential.h"
 #include "util_sequential.h"
 #include "ASSA_sequential.h"
+#include "ODE_sequential.h"
 #endif
 
 #ifdef __PARALLEL__
