@@ -35,10 +35,18 @@
 
 /* dx/dt = y , dy/dt = \mu(1-x^2)y - x*/
 
-void f(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* f_r){
+void vdp(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* f_r){
     f_r[0] = Y[1];
     f_r[1] = params[0]*(1.0 - Y[0]*Y[0])*Y[1] - Y[0];
 }
+
+/*Lotka-Volterra*/
+/* dx/dt = ax - yx , dy/dt = byx - y*/
+void lv(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* f_r){
+    f_r[0] = params[0]*Y[0] - Y[0]*Y[1];
+    f_r[1] = params[1]*Y[0]*Y[1] - Y[1];
+}
+
 
 
 int main(int argc , char ** argv)
@@ -49,39 +57,49 @@ int main(int argc , char ** argv)
     SSAL_real_t *T;
     SSAL_real_t *Y0;
     SSAL_real_t *Y_r;
-    SSAL_real_t mu;
+    SSAL_real_t *params;
     SSAL_real_t h;
-    int d;
-    d = 0;
+    int *d;
     int type;
     char opts[256];
     int m,n;
 
-    m = 1;
+    SSAL_Initialise(argc,argv);
+    //m = 1;
+    m = 2;
     n = 2;
+    NT = (int)atoi(argv[1]);
 
     Y0 = (SSAL_real_t *)malloc(n*sizeof(SSAL_real_t));
-
-    NT = 10000;
+    params= (SSAL_real_t *)malloc(m*sizeof(SSAL_real_t));
+    d = (int *)malloc(n*sizeof(int));
     T = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
-    h = 50.0/((SSAL_real_t)NT);
+    Y_r = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
     
+    //h = 100.0/((SSAL_real_t)NT);
+    h = 15.0/((SSAL_real_t)NT);
     /*build sample times*/
     for (i=0; i < NT; i++){
         T[i] = h*((SSAL_real_t)(i+1));
     }
-
-    
-    Y_r = (SSAL_real_t *)malloc(NT*sizeof(SSAL_real_t));
-
-    mu = 5.0;
-    Y0[0] = -2.0; 
-    Y0[1] = -6.0; 
-    drk4s(m,n,NT,T,&mu,Y0,&f,1,&d,h,Y_r);
+    // use small timestep internally
+    h = 15.0/10000.0;
+    d[0] = 0;
+    d[1] = 1;
+    params[0]= 1.0;
+//    params[0]= (double)atof(argv[1]);
+    params[1]= 1.0;
+    Y0[0] = 1.0; 
+    Y0[1] = 0.5; 
+    //Y0[0] = 1e-6; 
+    //Y0[1] = 1e-6; 
+    drk4s(m,n,NT,T,params,Y0,&lv,n,d,h,Y_r);
 
     for (i=0;i<NT;i++)
     {
-        fprintf(stdout,"%f,%f\n", T[i],Y_r[i]);
+        // peturb with noise
+    //    fprintf(stdout,"%f,%f,%f\n", T[i],Y_r[i]+durngns(0.0,0.5),Y_r[NT+i]+ durngns(0.0,0.5));
+        fprintf(stdout,"%f,%f,%f\n", T[i],Y_r[i],Y_r[NT+i]);
     }
     return 0;
 }

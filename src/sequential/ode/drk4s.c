@@ -77,7 +77,7 @@ int drk4s(int m, int n, int nt, double * restrict T, double * restrict p, double
             /*complete timestep update*/
             for (i=0;i<n;i++)
             {
-                Y[i] += 0.5*h*(K1[i] + K2[i] + K3[i] + K4[i]);
+                Y[i] += (h*(K1[i] + 2.0*K2[i] + 2.0*K3[i] + K4[i]))/6.0;
             }
         }
         /*write out timestep*/
