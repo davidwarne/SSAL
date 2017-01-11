@@ -56,11 +56,14 @@ int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
     double t = 0;
     int ti,i,j,k,r;
    
-    double tau_l;
-    double tau_lm1;
+    double tau_f;
+    double tau_c;
+    double t_c;
+    double t_f;
 
-    tau_l = tau;
-    tau_lm1 = tau*M;
+    tau_f = tau;
+    tau_c = tau*((double)M);
+    
     /*initial conditions*/
     for (i=0;i<n;i++)
     {
@@ -72,70 +75,81 @@ int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
         Z_f[i] = X0[i];
     }
 
+    
+    /*compute coarse propensities*/
+    duhzds(m,n,nu_minus,c,Z_c,a_c);
+    /*compute fine propensities*/
+    duhzds(m,n,nu_minus,c,Z_f,a_f);
+
+    t_c = 0;
+    t_f = 0;
 
     for (ti=0;ti<nt;ti++)
     {
-        for (;t <=T[ti];t+=tau_lm1)
+        while((t_f + tau_f) <= T[ti])
         {
-            /*compute coarse propensities*/
-            duhzds(m,n,nu_minus,c,Z_c,a_c);
-            
-            for (k=0;k<M;k++)
+            /*compute fine propensities*/
+            duhzds(m,n,nu_minus,c,Z_f,a_f);
+            /*update virtual propensities*/
+            for (j=0;j<m;j++)
             {
-                /*compute fine propensities*/
-                duhzds(m,n,nu_minus,c,Z_f,a_f);
-                /*update virtual propensities*/
-                for (j=0;j<m;j++)
-                {
-                    b[0][j] = (a_c[j] < a_f[j]) ? a_c[j] : a_f[j];
-                }
-                for (j=0;j<m;j++)
-                {
-                    b[1][j] = a_c[j] - b[0][j];
-                }
-                for (j=0;j<m;j++)
-                {
-                    b[2][j] = a_f[j] - b[0][j];
-                }
-                /*generate poisson variates for each virtual reaction channel*/
-                for (r=0;r<3;r++)
-                {
-                    for (j=0;j<m;j++)
-                    {
-                        Y[r][j] = (b[r][j] <= 0) ? 0 : (double)durngpois(b[r][j]*tau_l);
-                    }
-                }
-
-
-                /*update coarse and fine state vectors*/
-                /*note Po(a_c*tau_l) = Po(b_1*tau_l) + Po(b_2*tau_l)*/
-                for (j=0;j<m;j++)
-                {
-                    for (i=0;i<n;i++)
-                    {
-                        Z_c[i] += (Y[0][j] + Y[1][j])*nu[j*n+i];
-                    }
-                }
-                
-                /*note Po(a_f*tau_l) = Po(b_1*tau_l) + Po(b_3*tau_l)*/
-                for (j=0;j<m;j++)
-                {
-                    for (i=0;i<n;i++)
-                    {
-                        Z_f[i] += (Y[0][j] + Y[2][j])*nu[j*n+i];
-                    }
-                }
-
+                b[0][j] = (a_c[j] < a_f[j]) ? a_c[j] : a_f[j];
             }
+            for (j=0;j<m;j++)
+            {
+                b[1][j] = a_c[j] - b[0][j];
+            }
+            for (j=0;j<m;j++)
+            {
+                b[2][j] = a_f[j] - b[0][j];
+            }
+            /*generate poisson variates for each virtual reaction channel*/
+            for (r=0;r<3;r++)
+            {
+                for (j=0;j<m;j++)
+                {
+                    /*we only generate a Poisson RV for b > 0*/
+                    Y[r][j] = (b[r][j] <= 0) ? 0 : (double)durngpois(b[r][j]*tau_l);
+                }
+            }
+
+            /*update coarse and fine state vectors*/
+            /*note po(a_c*tau_l) = po(b_1*tau_l) + po(b_2*tau_l)*/
+            for (j=0;j<m;j++)
+            {
+                for (i=0;i<n;i++)
+                {
+                    Z_c[i] += (Y[0][j] + Y[1][j])*nu[j*n+i];
+                }
+            }
+
+            /*note Po(a_f*tau_l) = Po(b_1*tau_l) + Po(b_3*tau_l)*/
+            for (j=0;j<m;j++)
+            {
+                for (i=0;i<n;i++)
+                {
+                    Z_f[i] += (Y[0][j] + Y[2][j])*nu[j*n+i];
+                }
+            }
+            t_f += tau_f;
+            k++;
+
+            if (k%M == 0) /*coarse update*/
+            {
+                /*compute coarse propensities*/
+                duhzds(m,n,nu_minus,c,Z_c,a_c);
+                t_c += tau_c;
+            }
+
         }
         /*write out timesteps*/
         for (i=0;i<ndims;i++)
         {
-            Z_l_r[i*nt+ti] = Z_f[dims[i]];
+            Z_f_r[i*nt+ti] = Z_f[dims[i]];
         }
         for (i=0;i<ndims;i++)
         {
-            Z_lm1_r[i*nt+ti] = Z_c[dims[i]];
+            Z_c_r[i*nt+ti] = Z_c[dims[i]];
         }
     }
 

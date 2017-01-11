@@ -105,7 +105,6 @@ int dumlnls(int m, int n, double T, double * restrict X0, double * restrict nu_m
                         E_l2[i] += Z_l_r[i]*Z_l_r[i];
                     }
                 }
- 
             }
 
         }

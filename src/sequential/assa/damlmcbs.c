@@ -23,7 +23,7 @@
  * @datails An efficient Monte Carlo estimator with the same statistical 
  * bias against exact simulation as a tau-leaping with fine-grain tau.
  * This function computes for a tau leap approximation Z_L with tau = tau0*M^(-L),
- *      E[f(Z_L(T))] ~ Q_0 + sum_l=1^L Q_l + O(epsilon)
+ *      E[f(Z_L(T))] ~ \mu[f(Z_L(T))]Q_0 + sum_l=1^L Q_l 
  * where
  *      Q_0 = 1/n0 sum_j=1^n0 f(Z_0^j(T)) with Z_0^j the j-th realisation of Z_0
  *      Q_l = 1/nl sum_j=1^nl f(Z_l^j(T)) - f(Z_{l-1}^j(T))
@@ -44,22 +44,21 @@
  * @param c the kinetic reaction rates
  * @param tau0 base level tau such that taul = tau0*M^(-l)
  * @param M scale factor between levels
- * @param L the number of levels
- * @param epsilon the desired statistical error (desired standard deviation)
+ * @param nl sample numbers at each level
  * @param ndims numebr dimension to measure
  * @param dims the dimensions indices 
  * @param f functional of state vector f : \mathbb{Z}^n -> \mathbb{R}^n 
- * @param E_X expected value of f(X(T))
- * @param V_X varience of f(X(T))
+ * @param E_X expected value of f(Z_L(T))
+ * @param V_X varience of the estimator \mu[f(Z_L(T))]
  *
- * @param if f == NULL then the expected state vector is used
+ * @param if pdep == 1 then f is expected to be a path-dependent functional and E_X and V_X will
+ * be single scalars. Otherwise f is assumed to be a path-independent functional and will be evaulated at each time point.
  */
 int damlmcbs(int m,int n, int nt, double * restrict T, double * restrict X0, double * restrict nu_minus,
-    double * restrict nu, double * restrict c, double tau0, int M, int L, double epsilon, 
-    int ndims,int * restrict dims, int (*f)(int,double *, double *), double * restrict E_X, double * restrict V_X)
+    double * restrict nu, double * restrict c, double tau0, int M, int L, int *nl, 
+    int ndims,int * restrict dims, int (*f)(int,double *, double *), unsigned char pdep, double * restrict E_X, double * restrict V_X)
 {
     int i,j,l; 
-    int nl[L]; /*sample sizes for each level*/
     double taul;
     double times[L];
     double sigma2[L];
@@ -174,7 +173,7 @@ int damlmcbs(int m,int n, int nt, double * restrict T, double * restrict X0, dou
             /*add to V_X*/
             for (i=0;i<nt*ndims;i++)
             {
-//                V_X[i] += E_l2[i]/((double)nl[l]);
+                V_X[i] += E_l2[i]/((double)nl[l]);
             }
             taul /= (double)M;
         }
