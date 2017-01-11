@@ -52,7 +52,6 @@ enum SSAL_AlgorithmType_enum {
     SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
     SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
     SSAL_ASSA_TAU_LEAP_CORRELATED_SEQUENTIAL,
-    SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL,
     SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL,
     SSAL_ASSA_EULER_MARUYAMA_CORRELATED_SEQUENTIAL
 };
@@ -67,8 +66,7 @@ enum SSAL_ModelType_enum {
 typedef enum SSAL_ModelType_enum SSAL_ModelType;
 
 enum SSAL_SimulationType_enum {
-    SSAL_REALISATIONS,
-    SSAL_EXPECTEDVALUE
+    SSAL_REALISATIONS
 };
 /** type name for  SSAL_SimulationType_enum*/
 typedef enum SSAL_SimulationType_enum SSAL_SimulationType;
@@ -176,32 +174,6 @@ struct SSAL_RealisationSimulation_struct {
 /** type name for  SSAL_RealisationSimulation_struct*/
 typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
-/**
- * realisation simulation
- */
-struct SSAL_ExpectedValueSimulation_struct {
-    /**numbr of observation times */
-    int NT;
-    /** observation times */
-    SSAL_real_t *T;
-    /** number of realisations*/
-    int NR;
-    /**number of initial conditions */
-    int NIC;
-    /** initial conditions */
-    SSAL_real_t *IC;
-    /** number od vvariables to observe */
-    int Nvar;
-    /** model variables to observe by name */
-    char **var;
-    int *varInd;
-    /** output data*/
-    SSAL_real_t *E;
-    SSAL_real_t *V;
-};
-/** type name for  SSAL_ExpectedValueSimulation_struct*/
-typedef struct SSAL_ExpectedValueSimulation_struct SSAL_ExpectedValueSimulation;
-
 /*macro functions*/
 
 
@@ -248,15 +220,12 @@ int SSAL_Initialise(int,char **);
 SSAL_Model SSAL_ImportLSBML(const char * );
 SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
                                 SSAL_real_t *, SSAL_real_t * );
-SSAL_Simulation SSAL_CreateExpectedValueSim(SSAL_Model *,int, char **, int, int, 
-                                SSAL_real_t*, SSAL_real_t * );
 
 /* simulation and operations*/
 int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 /*output*/
 int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
 int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
-int SSAL_WriteExpectedValueSim(FILE *, SSAL_ExpectedValueSimulation *);
 
 
 /*==================================================================*/
@@ -271,9 +240,6 @@ SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int,
 int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
             SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
-int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *, 
-            SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType , int , char **);
-
 int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
 
 /*==================================================================*/
@@ -287,9 +253,6 @@ SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** , int, int ,
 int SSAL_SimulateSDE(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
 int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *, 
             SSAL_StochasticDifferentialEquation *, SSAL_AlgorithmType,  int, char **);
-int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *, 
-            SSAL_StochasticDifferentialEquation *, SSAL_AlgorithmType , int , char **);
-
 
 /*utilities*/
 char** SSAL_UtilTokeniseArgs(int *,const char *);

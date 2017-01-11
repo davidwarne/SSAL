@@ -17,7 +17,7 @@ ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
 ODEDIR=$(SRCDIR)/sequential/ode
 
-EXESRC = $(EXPDIR)/TestABC.c $(EXPDIR)/TestCRN.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c
+EXESRC = $(EXPDIR)/TestCRN.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c
 SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(UTILDIR)/suarngs.c $(ESSADIR)/degils.c $(ASSADIR)/datauls.c $(ASSADIR)/dactauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c $(ODEDIR)/drk4s.c
 OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)

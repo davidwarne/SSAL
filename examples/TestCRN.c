@@ -99,26 +99,6 @@ int main(int argc , char ** argv)
             algType = SSAL_ASSA_TAU_LEAP_SEQUENTIAL;
             tau = (SSAL_real_t)atof(argv[++i]);
         }
-        else if(!strcmp("-L",argv[i]))
-        {
-            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            L = (int)atoi(argv[++i]);
-        }
-        else if(!strcmp("-M",argv[i]))
-        {
-            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            M = (int)atoi(argv[++i]);
-        }
-        else if(!strcmp("-T0",argv[i]))
-        {
-            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            tau0 = (SSAL_real_t)atof(argv[++i]);
-        }
-        else if(!strcmp("-eps",argv[i]))
-        {
-            algType = SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL;
-            eps = (SSAL_real_t)atof(argv[++i]);
-        }
         else if (!strcmp("-h",argv[i]))
         {
             //fprintf(stderr,"Usage: %s [-n numRealisations] -nt numTimePoints -t endTime [-m model] [-st simType] [-T tau] [-T0 tau0 -L L -M M -eps eps]\n");
@@ -155,11 +135,6 @@ int main(int argc , char ** argv)
             sim = SSAL_CreateRealisationsSim(&CRN,n,NULL,NR,NT,T,X0);
         }
             break;
-        case 2:
-        {
-            sim = SSAL_CreateExpectedValueSim(&CRN,n,NULL,NR,NT,T,X0);
-        }
-            break;
     }
 
     free(T);
@@ -173,9 +148,6 @@ int main(int argc , char ** argv)
             break;
         case SSAL_ASSA_TAU_LEAP_SEQUENTIAL:
             sprintf(opts,"--tau %f",tau);
-            break;
-        case SSAL_ASSA_MULTI_LEVEL_SEQUENTIAL:
-            sprintf(opts,"--tau0 %f --L %d --M %d --eps %f",tau0,L,M,eps);
             break;
     }
     /*simulate realisations*/
