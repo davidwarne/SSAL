@@ -20,6 +20,5 @@
 
 
 /* RK4 method*/
-int srk4s(int, int, int, float * restrict, float * restrict, float * restrict, void (*f)(float *, unsigned int, float *, unsigned int, float, float *), int , int * restrict, float, float * restrict);
 int drk4s(int, int, int, double * restrict, double * restrict, double * restrict, void (*f)(double *, unsigned int, double *, unsigned int, double, double *), int , int * restrict, double, double * restrict);
 #endif

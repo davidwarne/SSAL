@@ -27,7 +27,7 @@
     #define RNG_BLOCK_SIZE 1000
 #endif
 
-#define ONE_ON_RAND_MAX (1.0/((float)RAND_MAX))
+#define ONE_ON_RAND_MAX (1.0/((double)RAND_MAX))
 
 
 /**
@@ -62,10 +62,8 @@ struct sRNG_struct {
 };
 typedef struct sRNG_struct sRNG;
 #if defined(__MKL__)
-#define SURAND ((float)__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
 #define DURAND (__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
 #else
-#define SURAND (((float)(*(__UTIL_sRNG.U))())/((float)RAND_MAX))
 #define DURAND (((double)(*(__UTIL_sRNG.U))())/((double)RAND_MAX))
 #endif
 /** a global list of RNG streams */
@@ -74,35 +72,21 @@ extern sRNG __UTIL_sRNG;
 void suarngs(unsigned int, void (*)(unsigned int), int (*)(void));
 
 /* Continuous distributions samplers*/
-float surngexps(float);
-float surngus(float, float);
-
 double durngexps(double);
 double durngus(double, double);
+/* normal distribution*/
+double durngns(double, double);
+/* multi-variate normal distribution*/
+void durngmvns(int , double * restrict, double * restrict , double * restrict , double * restrict );
 
 /*Discrete distribution samplers*/
-unsigned int surngpmfs(int,float *,float);
-unsigned int surngpois(float);
-
 unsigned int durngpmfs(int,double *,double);
 unsigned int durngpois(double);
 
 /*hazard rate/ propensity function computation*/
-int suhzds(int ,int ,float * restrict, float *, float * restrict, float * restrict);
 int duhzds(int ,int ,double * restrict, double *, double * restrict, double * restrict);
 
-/* normal distribution*/
-float surngns(float, float);
-double durngns(double, double);
-
-/* multi-variate normal distribution*/
-void durngmvns(int , double * restrict, double * restrict , double * restrict , double * restrict );
-
 /*empirical MLMC optimal sample size estimation*/
-int sumlnls(int, int, float, float * restrict, float * restrict, float * restrict, 
-    float * restrict, float, int, int, float, int, int * restrict, 
-    int (*)(int, float *, float *), int * restrict);
-
 int dumlnls(int, int, double, double * restrict, double * restrict, double * restrict, 
     double * restrict, double, int, int, double, int, int * restrict, 
     int (*)(int, double *, double *), int * restrict);

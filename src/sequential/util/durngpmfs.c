@@ -31,7 +31,7 @@ unsigned int durngpmfs(int n,double *p,double p_sum)
     double u;
     double tmp,q;
     int k;
-    u = SURAND;
+    u = DURAND;
     tmp = 0;
     q = p_sum*u;
     for (k=0;k<n;k++)

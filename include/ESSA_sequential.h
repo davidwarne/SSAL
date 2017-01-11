@@ -21,9 +21,6 @@
 #include "util_sequential.h"
 
 /*Gillespie method*/
-int segils(int,int,int,float * restrict, float *restrict, float * restrict, 
-    float * restrict, float *restrict, int, int * restrict, float * restrict);
-
 int degils(int,int,int,double * restrict, double *restrict, double * restrict, 
     double * restrict, double *restrict, int, int * restrict, double * restrict);
 #endif

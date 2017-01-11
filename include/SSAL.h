@@ -41,11 +41,7 @@
 #define SSAL_MAX_BUFFER_SIZE    1024
 
 
-#ifdef __FLOAT64__
-    typedef double SSAL_real_t;
-#else
-    typedef float  SSAL_real_t;
-#endif
+typedef double SSAL_real_t;
 
 /**
  * @enum SSAL_AlgorithmType_enum

@@ -42,7 +42,7 @@
  */
 int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0, 
    double * restrict nu_minus, double * restrict nu, double * restrict c, int ndims , 
-   int * restrict dims,double tau, int M, double * restrict Z_l_r, double * restrict Z_lm1_r)
+   int * restrict dims,double tau, int M, double * restrict Z_f_r, double * restrict Z_c_r)
 {
     double Z_c[n]; /*coarse and fine grain state vectors*/ 
     double Z_f[n];
@@ -109,7 +109,7 @@ int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
                 for (j=0;j<m;j++)
                 {
                     /*we only generate a Poisson RV for b > 0*/
-                    Y[r][j] = (b[r][j] <= 0) ? 0 : (double)durngpois(b[r][j]*tau_l);
+                    Y[r][j] = (b[r][j] <= 0) ? 0 : (double)durngpois(b[r][j]*tau_f);
                 }
             }
 

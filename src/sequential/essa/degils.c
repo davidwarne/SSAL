@@ -69,7 +69,7 @@ int degils(int m,int n,int nt,double * restrict T, double * restrict X0, double 
     for (ti=0;ti<nt;ti++)
     {
         /*run a gillespie till we reach the next measure time*/
-        while ((t + delta) < T[ti])
+        while ((t + deltat) < T[ti])
         {
             int k;
             /* sample discrete distribution to determine the reaction

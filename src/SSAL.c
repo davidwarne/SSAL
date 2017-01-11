@@ -1020,13 +1020,8 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
         {
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 degils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,sim->varInd,X_rj+j*(sim->NT*sim->Nvar));
-#else
-                segils(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,sim->varInd,X_rj+j*(sim->NT*sim->Nvar));
-#endif
             }
         }
             break;
@@ -1038,13 +1033,8 @@ int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *sim,
 
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 datauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
                     nu,model->c,sim->Nvar,sim->varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
-#else
-                satauls(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                    nu,model->c,sim->Nvar,sim->varInd,tau,X_rj+j*(sim->NT*sim->Nvar));
-#endif
             }
         }
             break;
@@ -1079,13 +1069,8 @@ int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim,
             h = (SSAL_real_t)atof(SSAL_GetArg("--h",argc,argv));
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 daems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma
                     ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
-#else
-                saems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma
-                    ,sim->Nvar,sim->varInd,h,X_rj+j*(sim->NT*sim->Nvar));
-#endif
             }
         }
             break;
@@ -1105,12 +1090,7 @@ int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *sim,
                 for (j=0;j<sim->NR;j+=2)
                 {
 
-#ifdef __FLOAT64__
                     dacems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,model->mu,model->sigma,sim->Nvar,sim->varInd,h_f,M,X_rj + j*(sim->NT*sim->Nvar),X_rj + (j+1)*(sim->NT*sim->Nvar));
-#else
-                    SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
-                    return 1;
-#endif
                 }
             }
         }
@@ -1165,13 +1145,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
              * when a large number of realisations are used*/                
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 degils(model->M,model->N,sim->NT,sim->T,sim->IC,
                     model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,X_r);
-#else
-                segils(model->M,model->N,sim->NT,sim->T,sim->IC,
-                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,X_r);
-#endif
                 
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
@@ -1214,13 +1189,8 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 datauls(model->M,model->N,sim->NT,sim->T,sim->IC,
                     model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,tau,X_r);
-#else
-                satauls(model->M,model->N,sim->NT,sim->T,sim->IC,
-                    model->nu_minus,nu,model->c,sim->Nvar,sim->varInd,tau,X_r);
-#endif
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
                     E_X[i] += (double)X_r[i];
@@ -1263,13 +1233,9 @@ int SSAL_SimulateCRNExpectedValue(SSAL_ExpectedValueSimulation *sim,
             M = (int)atoi(SSAL_GetArg("--M",argc,argv));
             L = (int)atoi(SSAL_GetArg("--L",argc,argv));
             eps = (SSAL_real_t)atof(SSAL_GetArg("--eps",argc,argv));
-#ifdef __FLOAT64__
-            damlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
-#else
-            samlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
-                nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
-#endif
+            SSAL_HandleError(SSAL_UNSUPPORTED_ALGORITHM_ERROR,"SSAL_SimulateCRN",__LINE__,1,0,NULL);
+//            damlmcbs(model->M,model->N,sim->NT,sim->T,sim->IC,model->nu_minus,
+//                nu,model->c,tau0,M,L,eps,sim->Nvar,sim->varInd,NULL,E_X,V_X);
         }
             break;
         default:
@@ -1327,13 +1293,8 @@ int SSAL_SimulateSDEExpectedValue(SSAL_ExpectedValueSimulation *sim,
             
             for (j=0;j<sim->NR;j++)
             {
-#ifdef __FLOAT64__
                 daems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,
                     model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
-#else
-                saems(model->M,model->N,sim->NT,sim->T,model->p,sim->IC,
-                    model->mu,model->sigma,sim->Nvar,sim->varInd,h,X_r);
-#endif
                 for (i=0;i<sim->Nvar*sim->NT;i++)
                 {
                     E_X[i] += (double)X_r[i];

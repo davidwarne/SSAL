@@ -145,7 +145,7 @@ int ABCrejection(SSAL_Simulation *sim, SSAL_AlgorithmType alg, char* args, int m
         /*generate sample theta ~ U(a,b)*/
         for (j=0;j<m;j++)
         {
-            CRN_ptr->c[j] = surngus(a[j],b[j]);     
+            CRN_ptr->c[j] = durngus(a[j],b[j]);     
         }
         
         /*run simulation*/
