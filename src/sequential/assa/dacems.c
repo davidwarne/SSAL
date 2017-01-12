@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,13 @@
  * @param X_c_r realisation of X_c(t)
  *
  */
-int dacems(int m,int n, int nt, double * restrict T, double * p, double * restrict X0, void (*a)(double *, unsigned int, double *, unsigned int, double, double *), void (*b)(double*, unsigned int, double *, unsigned int, double, double *), int ndims, int * restrict dims, double h, int M, double * X_f_r, double * X_c_r)
+int 
+dacems(int m,int n, int nt, double * restrict T, double * p, 
+    double * restrict X0, 
+    void (*a)(double *, unsigned int, double *, unsigned int, double, double *), 
+    void (*b)(double*, unsigned int, double *, unsigned int, double, double *), 
+    int ndims, int * restrict dims, double h, int M, double * X_f_r, 
+    double * X_c_r)
 {
     double X_c[n];
     double X_f[n];
@@ -144,5 +150,5 @@ int dacems(int m,int n, int nt, double * restrict T, double * p, double * restri
             X_f_r[i*nt + ti] = X_f[dims[i]];
         }
     }
-    
+    return 0;    
 }

@@ -17,8 +17,11 @@
 #include "ESSA_sequential.h"
 #include "util_sequential.h"
 
+#include <stdio.h>
+
 /**
- * @brief Double Precision Gillespie exact stochastic simulation algorithm(eSSA)
+ * @brief Double Precision Modified Next Reaction Method  exact stochastic 
+ * simulation algorithm(eSSA)
  * @details Simulates a discrete-state continuous time Markov process.
  *
  * @param m number of reactions
@@ -37,16 +40,18 @@
  * @retVal 
  */
 int 
-degils(int m,int n,int nt,double * restrict T, double * restrict X0, 
+demnrms(int m,int n,int nt,double * restrict T, double * restrict X0, 
        double *restrict nu_minus, double * restrict nu,double * restrict c,
        int ndims,int *restrict dims,double *restrict X_r)
 {
     double a[m]; /*propensities or hazard values*/
     double X[n]; /* state vector*/
     double t=0;
-    double a_0; /*combined propensity*/
-    double deltat; /* time to next reaction*/
-
+    double delta;
+    double deltat[m]; /* time to next reaction*/
+    double P[m];
+    double T_r[m];
+    int mu;
     int i,j,ti;
 
     /*copy initial condition*/
@@ -55,50 +60,71 @@ degils(int m,int n,int nt,double * restrict T, double * restrict X0,
         X[i] = X0[i];
     }
 
+    for (j=0;j<m;j++)
+    {
+        T_r[j] = 0;
+    }
+
     /*compute propensities*/
     duhzds(m,n,nu_minus,c,X,a);
     
-    /*total propensity*/
-    a_0 = 0;
+
     for (j=0;j<m;j++)
     {
-        a_0 += a[j];
+        P[j] = durngexps(1);
+    }
+    for (j=0;j<m;j++)
+    {
+        deltat[j] = (a[j] > 0) ? (P[j] -T_r[j])/a[j] : INFINITY;    
     }
 
-    /*generate time to next reaction dt ~ Exp(a_0)*/
-    deltat = durngexps(a_0);
+    delta = deltat[0];
+    mu = 0;
+    for (j=0;j<m;j++)
+    {
+        if (delta > deltat[j])
+        {
+           delta = deltat[j];
+           mu = j;
+        }
+    }
 
     t=0;
     for (ti=0;ti<nt;ti++)
     {
-        /*run a gillespie till we reach the next measure time*/
-        while ((t + deltat) < T[ti])
+        while ((t + delta) < T[ti])
         {
-            int k;
-            /* sample discrete distribution to determine the reaction
-             * channel 
-             */
-            k = durngpmfs(m,a,a_0);
+            /*update time*/
+            t = t + delta;
+            
             /*update state*/
             for (i=0;i<n;i++)
             {
-                X[i] += nu[n*k + i];
+                X[i] += nu[n*mu + i];
             }
-            /*update time*/
-            t = t + deltat;
+            for (j=0;j<m;j++)
+            {
+                T_r[j] += a[j]*delta;
+            }
+            P[mu] += durngexps(1);
 
             /*update propensities*/
             duhzds(m,n,nu_minus,c,X,a);
-
-            /*total propensity*/
-            a_0 = 0;
             for (j=0;j<m;j++)
             {
-                a_0 += a[j];
+                deltat[j] = (a[j] > 0 ) ? (P[j] -T_r[j])/a[j] : INFINITY ;    
             }
         
-            /*generate time to next reaction dt ~ Exp(a_0)*/
-            deltat = durngexps(a_0);
+            delta = deltat[0];
+            mu = 0;
+            for (j=0;j<m;j++)
+            {
+                if (delta > deltat[j])
+                {
+                   delta = deltat[j];
+                   mu = j;
+                }
+            }
         }
 
         /*record our next measurement*/

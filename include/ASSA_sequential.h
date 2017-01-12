@@ -1,6 +1,6 @@
 
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,22 +24,34 @@
 #define MLMC_TIMING_TRIALS 100
 
 /*Tau-leaping method*/
-int datauls(int,int,int,double * restrict, double *restrict, double * restrict, 
-    double * restrict, double *restrict, int, int * restrict, double, double * restrict);
+int 
+datauls(int,int,int,double * restrict, double *restrict, double * restrict, 
+        double * restrict, double *restrict, int, int * restrict, double,
+        double * restrict);
 
 /*Correlated tau-leaping method (for nested tau levels)*/
-int dactauls(int, int, int, double * restrict, double * restrict, double * restrict, 
-    double * restrict, double * restrict, int, int * restrict, double, int, double * restrict, 
-    double * restrict);
+int 
+dactauls(int, int, int, double * restrict, double * restrict, double * restrict, 
+         double * restrict, double * restrict, int, int * restrict, double, int, 
+         double * restrict, double * restrict);
+/* Correlated tau-leaping method with Exact Next reaction method*/
+int 
+daectauls(int, int, int, double *restrict, double * restrict,double * restrict, 
+          double *restrict, double * restrict, int, int *, double,
+          double * restrict, double * restrict);
 
-/* Multilevel Monte Carlo estimator for DSCT Markov Processes (bias estimator)*/
-int damlmcbs(int ,int , int , double * restrict , double * restrict , double * restrict ,
-    double * restrict , double * restrict , double , int , int , double, 
-    int,int * restrict , int (*)(int,double *, double *), double * restrict , double * restrict );
 
 /* Euler-Maruyama Method*/
-int daems(int , int, int , double * restrict , double * restrict, double * restrict , void (*)(double *, unsigned int, double *, unsigned int, double,double *), void (*)(double*, unsigned int, double *, unsigned int, double,double*),int , int *restrict , double , double *restrict );
+int 
+daems(int , int, int , double * restrict , double * restrict, double * restrict, 
+      void (*)(double *, unsigned int, double *, unsigned int, double,double *), 
+      void (*)(double*, unsigned int, double *, unsigned int, double,double*),
+      int , int *restrict , double , double *restrict );
 
 /*Correlated Euler-Maruyama method (for nested h steps*/
-int dacems(int,  int, int , double * restrict ,double * restrict, double * restrict , void (*)(double *, unsigned int, double *, unsigned int, double, double *), void (*)(double*, unsigned int, double *, unsigned int, double, double *), int , int * restrict , double , int , double * , double * );
-#endif
+int 
+dacems(int,  int, int , double * restrict ,double * restrict, double * restrict, 
+       void (*)(double*, unsigned int, double*, unsigned int, double, double*), 
+       void (*)(double*, unsigned int, double *, unsigned int, double, double*), 
+       int , int * restrict , double , int , double * , double * );
+#endif /* __ASSA_SEQUENTIAL_H_ */

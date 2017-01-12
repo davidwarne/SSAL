@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@
 #define SSAL_UNKNOWN_TYPE_ERROR         -4
 #define SSAL_MEMORY_ERROR               -5
 #define SSAL_UNSUPPORTED_ERROR          -6
-#define SSAL_UNSUPPORTED_ALGORITHM_ERROR -7
 
 /*option codes*/
 #define SSAL_MAX_NAME_SIZE      128
@@ -44,50 +43,13 @@
 typedef double SSAL_real_t;
 
 /**
- * @enum SSAL_AlgorithmType_enum
- * @brief Enumeration of the available Exact and Approximate algorithms
- */
-enum SSAL_AlgorithmType_enum {
-    SSAL_ESSA_GILLESPIE_SEQUENTIAL,
-    SSAL_ESSA_GIBSON_BRUCK_SEQUENTIAL,
-    SSAL_ASSA_TAU_LEAP_SEQUENTIAL,
-    SSAL_ASSA_TAU_LEAP_CORRELATED_SEQUENTIAL,
-    SSAL_ASSA_EULER_MARUYAMA_SEQUENTIAL,
-    SSAL_ASSA_EULER_MARUYAMA_CORRELATED_SEQUENTIAL
-};
-/** type name for  SSAL_Algorithm_enum*/
-typedef enum SSAL_AlgorithmType_enum SSAL_AlgorithmType;
-
-enum SSAL_ModelType_enum {
-    SSAL_CHEMICAL_REACTION_NETWORK,
-    SSAL_STOCHASTIC_DIFFERENTIAL_EQUATION
-};
-/** type name for  SSAL_ModelType_enum*/
-typedef enum SSAL_ModelType_enum SSAL_ModelType;
-
-enum SSAL_SimulationType_enum {
-    SSAL_REALISATIONS
-};
-/** type name for  SSAL_SimulationType_enum*/
-typedef enum SSAL_SimulationType_enum SSAL_SimulationType;
-
-/**
- * generic stochastic model 
- */
-struct SSAL_Model_struct {
-    SSAL_ModelType type;
-    void *model;
-};
-/** type name for  SSAL_Model struct*/
-typedef struct SSAL_Model_struct SSAL_Model;
-
-/**
  * @struct SSAL_ChemicalReactionNetwork_struct
  * @brief Defines a stochastic Chemical Reaction network model
  * @detail A user can manually interact with an instance of this structure
  * or use the SSAL_Create_ChemicalReactionNetwork function
  */
-struct SSAL_ChemicalReactionNetwork_struct {
+struct SSAL_ChemicalReactionNetwork_struct 
+{
     /** Chemical Species Names*/
     char ** names;
     /** number of Chemical Species*/
@@ -103,8 +65,9 @@ struct SSAL_ChemicalReactionNetwork_struct {
     /**default initial condition*/
     SSAL_real_t *X0;
 };
+
 /** type name for  SSAL_ChemicalReactionNetwork_struct*/
-typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
+typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_CRN;
 
 /**
  * @struct SSAL_StochasticDifferentialEquation_struct
@@ -112,7 +75,8 @@ typedef struct SSAL_ChemicalReactionNetwork_struct SSAL_ChemicalReactionNetwork;
  *          dX_t = mu(X_t,t)dt + sigma(X_t,t)dW_t 
  * where X_t \in R^N and W_t is a vector of N Wiener processes.
  */
-struct SSAL_StochasticDifferentialEquation_struct {
+struct SSAL_StochasticDifferentialEquation_struct 
+{
     /** Variable Names*/
     char ** names;
     /** number of equations */
@@ -120,59 +84,22 @@ struct SSAL_StochasticDifferentialEquation_struct {
     /** number of parameters */
     uint32_t M;
     /** drift function*/
-    void (*mu)(SSAL_real_t*,uint32_t, SSAL_real_t*, uint32_t, SSAL_real_t, SSAL_real_t*);
+    void (*mu)(SSAL_real_t*,uint32_t, SSAL_real_t*, uint32_t, 
+               SSAL_real_t, SSAL_real_t*);
     /** diffusion function */
-    void (*sigma)(SSAL_real_t*,uint32_t,SSAL_real_t *, uint32_t, SSAL_real_t,SSAL_real_t*);
+    void (*sigma)(SSAL_real_t*,uint32_t,SSAL_real_t *, uint32_t, 
+                  SSAL_real_t,SSAL_real_t*);
     /**@todo add corvariance matrix support for true multi-variate SDE
-     * currently only SDE's driven by independent standard Brownian motions are supported
+     * currently only SDE's driven by independent standard Brownian motions 
+     * are supported
      */    
     /** parameter vector */
     SSAL_real_t *p;
     /** default initial conditions*/
     SSAL_real_t *X0;
 };
-typedef struct SSAL_StochasticDifferentialEquation_struct SSAL_StochasticDifferentialEquation;
+typedef struct SSAL_StochasticDifferentialEquation_struct SSAL_SDE;
 
-/**
- * @struct SSAL_Simulation_struct
- * @brief defines generic simulation 
- */
-struct SSAL_Simulation_struct{
-    /**
-     * The type of simulation structure
-     */
-    SSAL_SimulationType type;
-    /** model to use in simulation */
-    SSAL_Model *model;
-    void *sim;
-};
-/** type name for  SSAL_Simulation_struct*/
-typedef struct SSAL_Simulation_struct SSAL_Simulation;
-
-/**
- * realisation simulation
- */
-struct SSAL_RealisationSimulation_struct {
-    /**numbr of observation times */
-    int NT;
-    /** observation times */
-    SSAL_real_t *T;
-    /** number of realisations*/
-    int NR;
-    /**number of initial conditions */
-    int NIC;
-    /** initial conditions */
-    SSAL_real_t *IC;
-    /** number of variables to observe */
-    int Nvar;
-    /** model variables to observe by name */
-    char **var;
-    int *varInd;
-    /** output data*/
-    SSAL_real_t *output;
-};
-/** type name for  SSAL_RealisationSimulation_struct*/
-typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 
 /*macro functions*/
 
@@ -210,50 +137,47 @@ typedef struct SSAL_RealisationSimulation_struct SSAL_RealisationSimulation;
 /*==================================================================*/
 
 /*initialisation an error handling*/
-void SSAL_InitRNGS(unsigned int *, int);
+void 
+SSAL_InitRNGS(unsigned int *, int);
 
-void SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
+void 
+SSAL_HandleError(int , char *,int, unsigned char, unsigned char, char *); 
 
-int SSAL_Initialise(int,char **); 
+int 
+SSAL_Initialise(int,char **); 
 
 /* generic wrapper functions*/
-SSAL_Model SSAL_ImportLSBML(const char * );
-SSAL_Simulation SSAL_CreateRealisationsSim(SSAL_Model *,int, char **, int, int, 
-                                SSAL_real_t *, SSAL_real_t * );
-
-/* simulation and operations*/
-int SSAL_Simulate(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
-/*output*/
-int SSAL_WriteSimulation(FILE *,SSAL_Simulation);
-int SSAL_WriteRealisationsSim(FILE *, SSAL_RealisationSimulation *);
-
+SSAL_CRN 
+SSAL_ImportLSBML(const char * );
 
 /*==================================================================*/
 /*         Chemical Reaction Network API                            */
 /*==================================================================*/
 
 /*object creation*/
-SSAL_Model SSAL_CreateChemicalReactionNetwork(char **, int ,int, 
-                            SSAL_real_t * restrict , SSAL_real_t * restrict , SSAL_real_t * restrict );
+SSAL_CRN 
+SSAL_CreateChemicalReactionNetwork(char **, int ,int, SSAL_real_t * restrict , 
+                                   SSAL_real_t * restrict , 
+                                   SSAL_real_t * restrict );
 
-/* Chemical Reaction Network structures and functions*/
-int SSAL_SimulateCRN(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
-int SSAL_SimulateCRNRealisations(SSAL_RealisationSimulation *, 
-            SSAL_ChemicalReactionNetwork *, SSAL_AlgorithmType,  int, char **);
-int SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_ChemicalReactionNetwork);
+int 
+SSAL_WriteChemicalReactionNetwork(FILE *,SSAL_CRN);
 
 /*==================================================================*/
 /*         Stochastic Differential Equation API                     */
 /*==================================================================*/
 /* SDE structures and functions*/
-SSAL_Model SSAL_CreateStochasticDifferentialEquation(char ** , int, int ,
-          void (*)(SSAL_real_t *, uint32_t,SSAL_real_t*, uint32_t, SSAL_real_t,SSAL_real_t*),
-          void (*)(SSAL_real_t *, uint32_t,SSAL_real_t*,uint32_t, SSAL_real_t,SSAL_real_t*), SSAL_real_t *);
-
-int SSAL_SimulateSDE(SSAL_Simulation *, SSAL_AlgorithmType, const char *);
-int SSAL_SimulateSDERealisations(SSAL_RealisationSimulation *, 
-            SSAL_StochasticDifferentialEquation *, SSAL_AlgorithmType,  int, char **);
+SSAL_SDE 
+SSAL_CreateStochasticDifferentialEquation(char ** , int, int ,
+                                          void (*)(SSAL_real_t *,uint32_t,
+                                                   SSAL_real_t*, uint32_t, 
+                                                   SSAL_real_t,SSAL_real_t*),
+                                          void (*)(SSAL_real_t *,uint32_t,
+                                                   SSAL_real_t*,uint32_t, 
+                                                   SSAL_real_t, SSAL_real_t*), 
+                                          SSAL_real_t *);
 
 /*utilities*/
-char** SSAL_UtilTokeniseArgs(int *,const char *);
-#endif
+char** 
+SSAL_UtilTokeniseArgs(int *,const char *);
+#endif /*__SSAL_H_ */

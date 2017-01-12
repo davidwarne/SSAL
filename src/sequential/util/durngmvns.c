@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,15 @@
  * @details uses Box-Muller method for generating independent pairs
  * @param d dimension of distribution
  * @param mu mean vector
- * @param lambda lower triangular matrix (stored in row-major format) such that lambda*lambda^T = Sigma
- *               where Sigma is the covariance matrix.
+ * @param lambda lower triangular matrix (stored in row-major format) 
+ *               such that lambda*lambda^T = Sigma where Sigma is the 
+ *               covariance matrix.
  * @param Z N(0,I) random sample
  * @param X N(mu,Sigma) random sample
  */
-void durngmvns(int d, double * restrict mu, double * restrict lambda, double * restrict Z, double * restrict X)
+void 
+durngmvns(int d, double * restrict mu, double * restrict lambda, 
+          double * restrict Z, double * restrict X)
 {
     double u1,u2,r,t;
     int i,j;

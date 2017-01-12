@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,13 @@
 #include "util_sequential.h"
 
 /*Gillespie method*/
-int degils(int,int,int,double * restrict, double *restrict, double * restrict, 
-    double * restrict, double *restrict, int, int * restrict, double * restrict);
-#endif
+int 
+degils(int,int,int,double * restrict, double *restrict, double * restrict, 
+       double * restrict, double *restrict, int, int * restrict, double * 
+       restrict);
+/*modified next reaction method*/
+int
+demnrms(int,int,int,double * restrict, double *restrict, double * restrict, 
+       double * restrict, double *restrict, int, int * restrict, double * 
+       restrict);
+#endif /* __ESSA_SEQUENTIAL_H_*/

@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,15 @@
  *
  * @param m number of reactions
  * @param n dimension of state vector
- * @param R reactant stoichiometric coefficients m x n (stored in row-major format)
+ * @param R reactant stoichiometric coefficients m x n 
+ *          (stored in row-major format)
  * @param c rate constants
  * @param X state vector
  * @param A output propensities
  */
-int duhzds(int m,int n,double * restrict R, double *restrict c, double * restrict X, double * restrict A)
+int 
+duhzds(int m,int n,double * restrict R, double *restrict c, double * restrict X, 
+       double * restrict A)
 {
     int i,j,k;
     /*compute 
@@ -41,7 +44,7 @@ int duhzds(int m,int n,double * restrict R, double *restrict c, double * restric
         {
             for (k=0;k<R[j*n + i];k++)
             {
-                A[j] *= (X[i] - k);
+                A[j] *= (X[i] >= k) ? (X[i] - k) : 0;
             }
         }
     }

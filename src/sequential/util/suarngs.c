@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ sRNG __UTIL_sRNG;
 #if defined(__MKL__)
 int mkl_rand(void);
 void mkl_srand(unsigned int);
-#endif
+#endif /* __MKL__ */
 
 /**
  * @brief adds a new RNG to the global 
@@ -29,7 +29,8 @@ void mkl_srand(unsigned int);
  * @param s function pointer to seed function
  * @param u function pointer to generator function
  *
- * @note if s and u are NULL then the default C functions srand and rand are used
+ * @note if s and u are NULL then the default C functions srand and 
+ * rand are used
  */
 void suarngs(unsigned int seed, void (*s)(unsigned int), int (*u)(void))
 {
@@ -42,7 +43,7 @@ void suarngs(unsigned int seed, void (*s)(unsigned int), int (*u)(void))
    gsl_rng_env_setup();
    __UTIL_sRNG.T = gsl_rng_default;
    __UTIL_sRNG.r = gsl_rng_alloc(__UTIL_sRNG.T);
-#else
+#else /* not __MKL__ or __GSL__ */
     __UTIL_sRNG.seed = seed;
     if (s == NULL)
     {
@@ -61,7 +62,7 @@ void suarngs(unsigned int seed, void (*s)(unsigned int), int (*u)(void))
     {
         __UTIL_sRNG.U = u;
     }
-#endif
+#endif /* not __MKL__ or __GSL__*/
     (*(__UTIL_sRNG.s))(seed);
 }
 
@@ -74,7 +75,8 @@ int mkl_rand(void)
     }
     else
     {
-        vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD,__UTIL_sRNG.stream,RNG_BLOCK_SIZE,__UTIL_sRNG.dbuf,0,1);
+        vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD,__UTIL_sRNG.stream,
+                     RNG_BLOCK_SIZE,__UTIL_sRNG.dbuf,0,1);
         __UTIL_sRNG.ind = 0;
     }
 }
@@ -83,4 +85,4 @@ void mkl_srand(unsigned int s)
     vslNewStream(&(__UTIL_sRNG.stream),__UTIL_sRNG.brng,s);
     __UTIL_sRNG.ind = RNG_BLOCK_SIZE;
 }
-#endif
+#endif /* __MKL__*/

@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 #include "ASSA_sequential.h"
 #include "util_sequential.h"
+#include <stdio.h>
 
 /**
  * @brief Euler-Maruyama method
@@ -43,7 +44,12 @@
  * @param X_r state-space trajectory for measured dims (nt*ndims)
  * 
  */
-int daems(int m,int n, int nt, double * restrict T, double * restrict p, double * restrict X0, void (*a)(double *, unsigned int, double *, unsigned int,  double,double *), void (*b)(double*,unsigned int, double *, unsigned int, double,double*),int ndims, int *restrict dims, double h, double *restrict X_r)
+int 
+daems(int m,int n, int nt, double * restrict T, double * restrict p, 
+      double * restrict X0, 
+      void (*a)(double *, unsigned int, double *, unsigned int, double,double*), 
+      void (*b)(double*,unsigned int, double *, unsigned int, double,double*),
+      int ndims, int *restrict dims, double h, double *restrict X_r)
 {
     double X[n]; /*current state*/
     double ar[n]; /* return values of drift function*/

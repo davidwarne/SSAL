@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,17 +17,12 @@
 /**
  * @file SSAL_internal.h
  * @brief Computational backend for SSAL
- * @detail Provides interfaces to al computational routines. All routines follow a 
- * standard interface convention which allows them all to be registered at runtime 
- * to a lookup table which is utilised by the API to access algorithms generically.
- * As a result switching algorithms is always just a matter of changing the flag.
  *
  * @author David J. Warne (david.warne@qut.edu.au)
  * @author School of Mathematical Sciences
  * @author Science and Engineering Faculty
  * @author Queensland University of Technology
  *
- * @date 3 Sep 2015
  */
 
 #ifndef __SSAL_INTERNAL_H_
@@ -38,11 +33,12 @@
 #include "util_sequential.h"
 #include "ASSA_sequential.h"
 #include "ODE_sequential.h"
-#endif
+#endif /* __SERIAL__ */
 
 #ifdef __PARALLEL__
 #include "ESSA_parallel.h"
 #include "ASSA_parallal.h"
-#endif
+#include "util_parallel.h"
+#endif /*__PARALLEL__*/
 
-#endif
+#endif /* __SSAL_INTERNAL_H_ */

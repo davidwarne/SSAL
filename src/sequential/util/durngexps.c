@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@
  *
  * @returns X ~ Exp(lambda)
  */
-double durngexps(double lambda)
+double 
+durngexps(double lambda)
 {
     int i;
     double u;

@@ -20,5 +20,8 @@
 
 
 /* RK4 method*/
-int drk4s(int, int, int, double * restrict, double * restrict, double * restrict, void (*f)(double *, unsigned int, double *, unsigned int, double, double *), int , int * restrict, double, double * restrict);
-#endif
+int 
+drk4s(int, int, int, double * restrict, double * restrict, double * restrict, 
+      void (*)(double *, unsigned int, double*, unsigned int, double, double *), 
+      int , int * restrict, double, double * restrict);
+#endif /*__ODE_SEQUENTIAL_H_*/

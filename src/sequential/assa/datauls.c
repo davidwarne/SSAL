@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 /**
  * @detail tau-leap method
- * @detail An approximate stochastic simulation algorithm in which a continuous time
- * markov process is discretised in time
+ * @detail An approximate stochastic simulation algorithm in which a continuous 
+ * time Markov process is discretised in time
  *
  * @param m number of reactions
  * @param n dimension of state vector
@@ -35,8 +35,10 @@
  * @param tau the discrete timestep parameter
  * @param X_r state-space trajectory for measured dims (nt*ndims)
  */
-int datauls(int m,int n,int nt,double * restrict T, double * restrict X0, double *restrict nu_minus,
-    double * restrict nu,double * restrict c,int ndims,int *restrict dims,double tau,double *restrict X_r)
+int 
+datauls(int m,int n,int nt,double * restrict T, double * restrict X0, 
+        double *restrict nu_minus, double * restrict nu,double * restrict c,
+        int ndims,int *restrict dims,double tau,double *restrict X_r)
 {
     double a[m]; /*propensities*/
     double X[n]; /* the state vector*/

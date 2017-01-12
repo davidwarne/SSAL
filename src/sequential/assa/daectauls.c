@@ -17,6 +17,7 @@
 
 #include "ASSA_sequential.h"
 #include "util_sequential.h"
+#include<stdio.h>
 
 /**
  * @brief Simulated correlated tau-leap and exact samples paths.
@@ -41,16 +42,18 @@
  * @note the coupling is based on Anderson and Higham's method which couples a
  * tau-leaping simulation with a modified next-reaction simulation.
  */
-int daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
-    double * restrict nu_minus, double *restrict nu, double * restrict c, int ndims,
-    int * dims, double tau, int M, double * restrict Z_r, double * restrict X_r)
+int 
+daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
+          double * restrict nu_minus, double *restrict nu, double * restrict c, 
+          int ndims, int * dims, double tau, double * restrict X_r, 
+          double * restrict Z_r)
 {
     double Z[n]; /*approximate and exact states*/
     double X[n];
     double Ztilde[n]; /*stored approximate state of last step*/
     double a_Z[n]; /*exact and approximate propensities*/
     double a_X[n];
-    /*virual propensity channels*/
+    /*virtual propensity channels*/
     double b[3][m];
     /*P ~ Exp(1) */
     double P[3][m];
@@ -98,32 +101,44 @@ int daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
     duhzds(m,n,nu_minus,c,Ztilde,a_Z);
     duhzds(m,n,nu_minus,c,X,a_X);
    
-    /*both propensities will be the same at t = 0*/
-    for (j=0;j<m;j++)
-    {
-        b[0][j] = a_X[j];
-        b[1][j] = 0;
-        b[2][j] = 0;
-    }
-   
-    for (r=0;r<3;r++)
-    {
-        for (j=0;j<m;j++)
-        {
-            deltat[r][j] = (b[r][j] > 0) ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
-        }
-    }
-    /*only need to scan r = 0*/
-    delta = delta[0][0];
-    for (j=0;j<m;j++)
-    {
-        if (delta > delta[0][j])
-        {
-            delta = delta[0][j];
-            mu[0] = 0;
-            mu[1] = j;
-        }
-    }
+    /*update virtual propensities*/
+     for (j=0;j<m;j++)
+     {
+         b[0][j] = (a_Z[j] < a_X[j]) ? a_Z[j] : a_X[j];
+     }
+     for (j=0;j<m;j++)
+     {
+         b[1][j] = a_X[j] - b[0][j];
+     }
+     for (j=0;j<m;j++)
+     {
+         b[2][j] = a_Z[j] - b[0][j];
+     }
+     /*update deltas*/
+     for (r=0;r<3;r++)
+     {
+         for (j=0;j<m;j++)
+         {
+             deltat[r][j] = (b[r][j] > 0) 
+                            ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
+         }
+     }
+     /*find next reaction*/
+     delta = deltat[0][0];
+     mu[0] = 0;
+     mu[1] = 0;
+     for (r=0;r<3;r++)
+     {
+         for (j=0;j<m;j++)
+         {
+             if (delta > deltat[r][j])
+             {
+                 delta = deltat[r][j];
+                 mu[0] = r;
+                 mu[1] = j;
+             }
+         }
+     }
 
     for (ti=0;ti<nt;ti++)
     {
@@ -132,7 +147,7 @@ int daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
             if (t + delta >= T_tau)
             {
                 /*store current state for propensity update*/
-                for (i=0;i<n,i++)
+                for (i=0;i<n;i++)
                 {
                     Ztilde[i] = Z[i];
                 }
@@ -192,18 +207,21 @@ int daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
             {
                 for (j=0;j<m;j++)
                 {
-                    deltat[r][j] = (b[r][j] > 0) ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
+                    deltat[r][j] = (b[r][j] > 0) 
+                                   ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
                 }
             }
             /*find next reaction*/
             delta = deltat[0][0];
+            mu[0] = 0;
+            mu[1] = 0;
             for (r=0;r<3;r++)
             {
                 for (j=0;j<m;j++)
                 {
                     if (delta > deltat[r][j])
                     {
-                        delta = delta[r][j];
+                        delta = deltat[r][j];
                         mu[0] = r;
                         mu[1] = j;
                     }
@@ -220,4 +238,5 @@ int daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
             Z_r[i*nt + ti] = Z[dims[i]];
         }
     }
+    return 0;
 }

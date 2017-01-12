@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@
  * @detail For small lambda Donald Knuth's method is used
  * otherwise the method proposed by Atkinson is used. 
  */
-unsigned int durngpois(double lambda)
+unsigned int 
+durngpois(double lambda)
 {
     int i;
     if (lambda < 30.0)

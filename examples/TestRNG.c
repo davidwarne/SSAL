@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /**
- * @file TestSSAL.c
- * @brief An example program using the SSAL API to sample a discrete
- * state continuous time markov process
+ * @file TestRNG.c
+ * @brief An example program using the MV normal RNG
  *
  * @author David J. Warne (david.warne@qut.edu.au)
  * @author School of Mathematical Sciences
  * @author Queensland University of Technology
  *
- * @date 20 Sep 2015
  */
 #include<stdlib.h>
 #include<stdio.h>
 #include "SSAL.h"
 
-
-
-int main(int argc , char ** argv)
+int 
+main(int argc , char ** argv)
 {
     int i;
     int NT;

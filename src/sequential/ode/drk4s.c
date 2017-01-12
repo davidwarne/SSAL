@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,11 @@
  * @param h the time step
  * @param Y_r solution stajectory for measured dims (nt*dims)
  */
-int drk4s(int m, int n, int nt, double * restrict T, double * restrict p, double * restrict Y0, void (*f)(double *, unsigned int, double *, unsigned int, double, double *), int ndims, int * restrict dims, double h, double * restrict Y_r)
+int 
+drk4s(int m, int n, int nt, double * restrict T, double * restrict p, 
+      double * restrict Y0,
+      void (*f)(double *, unsigned int, double *,unsigned int, double, double*), 
+      int ndims, int * restrict dims, double h, double * restrict Y_r)
 {
     double Y[n]; /*current state*/
     double Y_i[n]; /*intermediate states*/

@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /**
- * @file TestSSAL.c
- * @brief An example program using the SSAL API to sample a discrete
- * state continuous time markov process
+ * @file TestODEL.c
+ * @brief An example program using the ODE solver
  *
  * @author David J. Warne (david.warne@qut.edu.au)
  * @author School of Mathematical Sciences
  * @author Queensland University of Technology
  *
- * @date 20 Sep 2015
  */
 #include<stdlib.h>
 #include<stdio.h>
@@ -35,21 +33,28 @@
 
 /* dx/dt = y , dy/dt = \mu(1-x^2)y - x*/
 
-void vdp(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* f_r){
+void 
+vdp(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, 
+    SSAL_real_t t, SSAL_real_t* f_r)
+{
     f_r[0] = Y[1];
     f_r[1] = params[0]*(1.0 - Y[0]*Y[0])*Y[1] - Y[0];
 }
 
 /*Lotka-Volterra*/
 /* dx/dt = ax - yx , dy/dt = byx - y*/
-void lv(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, SSAL_real_t t, SSAL_real_t* f_r){
+void 
+lv(SSAL_real_t *Y, unsigned int n, SSAL_real_t *params, unsigned int m, 
+   SSAL_real_t t, SSAL_real_t* f_r)
+{
     f_r[0] = params[0]*Y[0] - Y[0]*Y[1];
     f_r[1] = params[1]*Y[0]*Y[1] - Y[1];
 }
 
 
 
-int main(int argc , char ** argv)
+int 
+main(int argc , char ** argv)
 {
     int i;
     int NT;
@@ -97,8 +102,6 @@ int main(int argc , char ** argv)
 
     for (i=0;i<NT;i++)
     {
-        // peturb with noise
-    //    fprintf(stdout,"%f,%f,%f\n", T[i],Y_r[i]+durngns(0.0,0.5),Y_r[NT+i]+ durngns(0.0,0.5));
         fprintf(stdout,"%f,%f,%f\n", T[i],Y_r[i],Y_r[NT+i]);
     }
     return 0;

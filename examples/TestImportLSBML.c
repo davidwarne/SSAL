@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,18 +23,17 @@
  * @author School of Mathematical Sciences
  * @author Queensland University of Technology
  *
- * @date 12 Feb 2016
  */
 #include<stdlib.h>
 #include<stdio.h>
 #include "SSAL.h"
 
 
-int main(int argc , char ** argv)
+int 
+main(int argc , char ** argv)
 {
-    SSAL_AlgorithmType algType;
-    SSAL_Model CRN;
 
+    SSAL_CRN CRN;
     if (argc != 2)
     {
         fprintf(stderr,"Usage: %s <filename>\n",argv[0]);
@@ -44,7 +43,7 @@ int main(int argc , char ** argv)
     SSAL_Initialise(argc,argv);
 
     CRN = SSAL_ImportLSBML(argv[1]);
-    SSAL_WriteChemicalReactionNetwork(stderr,*((SSAL_ChemicalReactionNetwork *)CRN.model));
+    SSAL_WriteChemicalReactionNetwork(stderr,CRN);
 
     return 0;
 }

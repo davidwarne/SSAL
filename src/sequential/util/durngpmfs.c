@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2016  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@
  *
  * @return X sampled the given PMF
  */
-unsigned int durngpmfs(int n,double *p,double p_sum)
+unsigned int 
+durngpmfs(int n,double *p,double p_sum)
 {
     double u;
     double tmp,q;

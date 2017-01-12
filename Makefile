@@ -2,7 +2,8 @@
 
 CC = icc
 #OPTS = -O2 -D__SERIAL__ -D__FLOAT64__
-OPTS = -O2 -mkl=sequential -D__SERIAL__ -D__MKL__ 
+#gOPTS = -O2 -mkl=sequential -D__SERIAL__ -D__MKL__ 
+OPTS = -g -mkl=sequential -D__SERIAL__ -D__MKL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ -D__FLOAT64__ 
 
@@ -17,8 +18,9 @@ ESSADIR=$(SRCDIR)/sequential/essa
 ASSADIR=$(SRCDIR)/sequential/assa
 ODEDIR=$(SRCDIR)/sequential/ode
 
-EXESRC = $(EXPDIR)/TestCRN.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c
-SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(UTILDIR)/suarngs.c $(ESSADIR)/degils.c $(ASSADIR)/datauls.c $(ASSADIR)/dactauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c $(ODEDIR)/drk4s.c
+EXESRC = $(EXPDIR)/TestCRN.c $(EXPDIR)/TestCRN_cor.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c
+
+SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(UTILDIR)/suarngs.c $(ESSADIR)/degils.c $(ESSADIR)/demnrms.c $(ASSADIR)/datauls.c $(ASSADIR)/dactauls.c $(ASSADIR)/daectauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c $(ODEDIR)/drk4s.c
 OBJS = $(SRC:.c=.o)
 EXEOBJS=$(EXESRC:.c=.o)
 EXE = $(EXESRC:.c=)

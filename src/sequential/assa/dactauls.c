@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 /**
  * @brief simulate correlated tau-leaping simulations with nested times intervals
  * @details Simulates Z_l(t) and Z_{l-1}(t) with t = T[0], ... , T[nt-1] with 
- * tau_{l-1}/tau_l = M such that the state space trajectories of Z_l(t) and Z_{l-1}(t)
- * are strongly correlated.
+ * tau_{l-1}/tau_l = M such that the state space trajectories of Z_l(t) 
+ * and Z_{l-1}(t) are strongly correlated.
  *
  * @param m the number of reactions
  * @param n the dimension of state space
@@ -40,9 +40,11 @@
  * @param Z_l_r realisation of Z_l(t)
  * @param Z_lm1_r realisation of Z_{l-1}(t) with strong correlation to Z_l(t)
  */
-int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0, 
-   double * restrict nu_minus, double * restrict nu, double * restrict c, int ndims , 
-   int * restrict dims,double tau, int M, double * restrict Z_f_r, double * restrict Z_c_r)
+int 
+dactauls(int m, int n, int nt, double * restrict T, double * restrict X0, 
+         double * restrict nu_minus, double * restrict nu, double * restrict c, 
+         int ndims , int * restrict dims,double tau, int M, 
+         double * restrict Z_f_r, double * restrict Z_c_r)
 {
     double Z_c[n]; /*coarse and fine grain state vectors*/ 
     double Z_f[n];
@@ -109,7 +111,8 @@ int dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
                 for (j=0;j<m;j++)
                 {
                     /*we only generate a Poisson RV for b > 0*/
-                    Y[r][j] = (b[r][j] <= 0) ? 0 : (double)durngpois(b[r][j]*tau_f);
+                    Y[r][j] = (b[r][j] <= 0) 
+                              ? 0 : (double)durngpois(b[r][j]*tau_f);
                 }
             }
 

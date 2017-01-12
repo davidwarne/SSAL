@@ -1,5 +1,5 @@
 /* SSAL: Stochastic Simulation Algorithm Library
- * Copyright (C) 2015  David J. Warne
+ * Copyright (C) 2017  David J. Warne
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
     #include <mkl.h>
     #include <mkl_vsl.h>
     #define RNG_BLOCK_SIZE 1000
-#endif
+#endif /* __MKL__ */
 
 #define ONE_ON_RAND_MAX (1.0/((double)RAND_MAX))
 
@@ -38,12 +38,20 @@
  * The default however is to simply hold a seed and a function pointer
  * to a uniform RNG function (which is not considered thread safe).
  */
-struct sRNG_struct {
+struct sRNG_struct 
+{
 #if defined(__MKL__)
+    /** seed value*/
     unsigned int seed;
+    /** MKL VSL random stream */
     VSLStreamStatePtr stream;
+    /** Basic RNG type*/
     MKL_INT brng;
+    /** Buffer of uniform Random variates
+     * This is use as MKL functions ideally operate of arrays of length > 1000
+     */
     double dbuf[RNG_BLOCK_SIZE];
+    /** current position  in buffer */
     int ind; 
 #elif defined(__GSL__)
     /**seed value*/
@@ -51,43 +59,54 @@ struct sRNG_struct {
     /**GSL random number generator*/
     gsl_rng * r;
     gsl_rng_type * T;
-#else
+#else /* not __MKL__ or __GSL__ */
     /**seed value*/
     unsigned int seed;
-#endif
-    /*seed function*/
+#endif /* not  __MKL__ or  __GSL__ */
+    /**seed function*/
     void (*s)(unsigned int);
     /** uniform(0,1) generator function*/
     int (*U)(void);
 };
 typedef struct sRNG_struct sRNG;
+
 #if defined(__MKL__)
-#define DURAND (__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
-#else
-#define DURAND (((double)(*(__UTIL_sRNG.U))())/((double)RAND_MAX))
-#endif
+    #define DURAND (__UTIL_sRNG.dbuf[(*(__UTIL_sRNG.U))()])
+#else /* not __MKL__ */
+    #define DURAND (((double)(*(__UTIL_sRNG.U))())/((double)RAND_MAX))
+#endif /* not __MKL__ */
+
 /** a global list of RNG streams */
 extern sRNG __UTIL_sRNG;
 
-void suarngs(unsigned int, void (*)(unsigned int), int (*)(void));
+void 
+suarngs(unsigned int, void (*)(unsigned int), int (*)(void));
 
 /* Continuous distributions samplers*/
-double durngexps(double);
-double durngus(double, double);
+double 
+durngexps(double);
+
+double 
+durngus(double, double);
+
 /* normal distribution*/
-double durngns(double, double);
+double 
+durngns(double, double);
+
 /* multi-variate normal distribution*/
-void durngmvns(int , double * restrict, double * restrict , double * restrict , double * restrict );
+void 
+durngmvns(int , double * restrict, double * restrict , double * restrict , 
+          double * restrict );
 
 /*Discrete distribution samplers*/
-unsigned int durngpmfs(int,double *,double);
-unsigned int durngpois(double);
+unsigned int 
+durngpmfs(int,double *,double);
+
+unsigned int 
+durngpois(double);
 
 /*hazard rate/ propensity function computation*/
-int duhzds(int ,int ,double * restrict, double *, double * restrict, double * restrict);
-
-/*empirical MLMC optimal sample size estimation*/
-int dumlnls(int, int, double, double * restrict, double * restrict, double * restrict, 
-    double * restrict, double, int, int, double, int, int * restrict, 
-    int (*)(int, double *, double *), int * restrict);
+int 
+duhzds(int ,int ,double * restrict, double *, double * restrict, 
+       double * restrict);
 #endif
