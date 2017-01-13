@@ -3,7 +3,7 @@
 CC = icc
 #OPTS = -O2 -D__SERIAL__ -D__FLOAT64__
 #gOPTS = -O2 -mkl=sequential -D__SERIAL__ -D__MKL__ 
-OPTS = -g -mkl=sequential -D__SERIAL__ -D__MKL__ 
+OPTS = -O2 -Wall -mkl=sequential -D__SERIAL__ -D__MKL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ 
 #OPTS = -pg -g -std=gnu99 -D__SERIAL__ -D__FLOAT64__ 
 

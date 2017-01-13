@@ -79,6 +79,7 @@ int mkl_rand(void)
                      RNG_BLOCK_SIZE,__UTIL_sRNG.dbuf,0,1);
         __UTIL_sRNG.ind = 0;
     }
+    return __UTIL_sRNG.ind;
 }
 void mkl_srand(unsigned int s)
 {

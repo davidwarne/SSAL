@@ -42,7 +42,6 @@ main(int argc , char ** argv)
     SSAL_real_t *T;
     SSAL_real_t *X0;
     SSAL_real_t * X_r;
-    SSAL_real_t * nu;
     char **names;
     int type;
     char opts[256];
@@ -54,7 +53,6 @@ main(int argc , char ** argv)
     char *filename;
     int algType;
     SSAL_CRN CRN;
-    int *d; 
     NT = 0;    
     NR = 1;
     algType = MNRM;
@@ -123,18 +121,7 @@ main(int argc , char ** argv)
     for(i=0;i<CRN.N;i++)
         fprintf(stderr,"%s\n",names[i]);
 
-    d = (int *)malloc(CRN.N*sizeof(int));
-    nu = (SSAL_real_t *)malloc(CRN.N*CRN.M*sizeof(SSAL_real_t));
     X_r = (SSAL_real_t *)malloc(CRN.N*NT*NR*sizeof(SSAL_real_t));
-
-    for (i=0;i<CRN.N*CRN.M;i++)
-    {
-        nu[i] = CRN.nu_plus[i] - CRN.nu_minus[i];
-    }
-    for (i=0;i<CRN.N;i++)
-    {
-        d[i] = i; 
-    }
 
     switch (algType)
     {
@@ -142,17 +129,17 @@ main(int argc , char ** argv)
         case MNRM:
             for(i=0;i<NR;i++)
             {
-                degils(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,nu,CRN.c,CRN.N,d,
-                       X_r+i*CRN.N*NT);
-                //demnrms(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,nu,CRN.c,CRN.N,d,
-                //       X_r+i*CRN.N*NT);
+            //    degils(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,CRN.nu,CRN.c,
+            //           CRN.nvar,CRN.vars,X_r+i*CRN.N*NT);
+                demnrms(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,CRN.nu,CRN.c,
+                       CRN.nvar,CRN.vars,X_r+i*CRN.N*NT);
             }
             break;
         case TAU_LEAP:
             for(i=0;i<NR;i++)
             {
-                datauls(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,nu,CRN.c,CRN.N,d,
-                       tau,X_r+i*CRN.N*NT);
+                datauls(CRN.M,CRN.N,NT,T,CRN.X0,CRN.nu_minus,CRN.nu,CRN.c,
+                        CRN.nvar,CRN.vars,tau,X_r+i*CRN.N*NT);
             }
 
             break;

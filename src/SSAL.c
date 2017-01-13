@@ -147,6 +147,7 @@ SSAL_Initialise(int argc,char **argv)
         fprintf(stderr,"RNG Seed: %d\n",seed);
         fprintf(stderr,"RNG RAND_MAX: %d\n",RAND_MAX);
     }
+    return SSAL_SUCCESS;
 }
 
 
@@ -192,6 +193,12 @@ SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
     newCRN.N = (uint32_t)N;
     newCRN.M = (uint32_t)M;
     NxM = newCRN.N*newCRN.M;
+    newCRN.nvar = N;
+    if ((newCRN.vars = (int *)malloc(newCRN.N*sizeof(int))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+
     if ((nameArray = (char *)malloc(newCRN.N*SSAL_MAX_NAME_SIZE*sizeof(char)))
         == NULL)
     {
@@ -218,6 +225,13 @@ SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
     {
         SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
     }
+    
+    if((newCRN.nu = (SSAL_real_t *)malloc(NxM*sizeof(SSAL_real_t))) 
+       == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+
     if((newCRN.c = (SSAL_real_t *)malloc(newCRN.M*sizeof(SSAL_real_t))) 
        == NULL)
     {
@@ -233,6 +247,11 @@ SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
     {
         newCRN.nu_plus[i] = nu_plus[i];
     }
+    for (int i=0;i<NxM;i++)
+    {
+        newCRN.nu[i] = nu_plus[i] - nu_minus[i];
+    }
+
     for (int i=0;i<newCRN.M;i++)
     {
         newCRN.c[i] = c[i];
@@ -244,6 +263,11 @@ SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
             newCRN.names[i][j] = names[i][j];
         }
         newCRN.names[i][SSAL_MAX_NAME_SIZE-1] = '\0';
+    }
+
+    for (int i=0;i<newCRN.N;i++)
+    {
+        newCRN.vars[i] = i;
     }
 
     /*all done, return the new model*/
@@ -260,7 +284,7 @@ SSAL_CreateChemicalReactionNetwork(char ** names, int M,int N,
  * @param sigma function pointer diffusion function
  * @param p model parameter vector
  *
- * @returns A Stochasti Differential Equation Structure
+ * @returns A Stochastic Differential Equation Structure
  */
 SSAL_SDE 
 SSAL_CreateStochasticDifferentialEquation(char ** names, int M, int N, 
@@ -444,9 +468,9 @@ SSAL_ImportLSBML(const char * filename )
     size = ftell(fp);
     rewind(fp);
     /*allocate buffer*/
-    if(!(lsbml_json = (char *)malloc(size*sizeof(char))))
+    if((lsbml_json = (char *)malloc(size*sizeof(char))) == NULL)
     {
-        SSAL_HandleError(SSAL_IO_ERROR,funcname,__LINE__,1,0,NULL);
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
     }
     /*read contents*/
     fread((void *)lsbml_json,sizeof(char),size,fp);
@@ -461,16 +485,53 @@ SSAL_ImportLSBML(const char * filename )
     CRN.M = cJSON_GetArraySize(reactions);
     CRN.N = cJSON_GetArraySize(species);  
 
-    /*allocate memory for CRN components*/
-    CRN.names = (char **)malloc((CRN.N)*sizeof(char*));
+    /*by default we set nvar and vars such that all species are tracked*/
+    CRN.nvar = CRN.N;
+    if ((CRN.vars = (int *)malloc(CRN.N*sizeof(int))) == NULL) 
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     for (int i=0;i<CRN.N;i++)
     {
-        CRN.names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char));
+        CRN.vars[i] = i;
     }
-    CRN.X0 = (SSAL_real_t*) malloc((CRN.N)*sizeof(SSAL_real_t));
-    CRN.c = (SSAL_real_t*) malloc((CRN.M)*sizeof(SSAL_real_t));
-    CRN.nu_minus = (SSAL_real_t*)malloc((CRN.N)*(CRN.M)*sizeof(SSAL_real_t));
-    CRN.nu_plus = (SSAL_real_t*)malloc((CRN.N)*(CRN.M)*sizeof(SSAL_real_t));
+    
+    /*allocate memory for CRN components*/
+    if((CRN.names = (char **)malloc((CRN.N)*sizeof(char*))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    for (int i=0;i<CRN.N;i++)
+    {
+        if ((CRN.names[i] = (char *)malloc(SSAL_MAX_NAME_SIZE*sizeof(char))) 
+             == NULL)
+        {
+            SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+        }
+    }
+    if((CRN.X0 = (SSAL_real_t*) malloc((CRN.N)*sizeof(SSAL_real_t))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((CRN.c = (SSAL_real_t*) malloc((CRN.M)*sizeof(SSAL_real_t))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((CRN.nu_minus = 
+       (SSAL_real_t*)malloc((CRN.N)*(CRN.M)*sizeof(SSAL_real_t))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((CRN.nu_plus = (SSAL_real_t*)malloc((CRN.N)*(CRN.M)*sizeof(SSAL_real_t)))
+       == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if((CRN.nu = (SSAL_real_t*)malloc((CRN.N)*(CRN.M)*sizeof(SSAL_real_t))) 
+       == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     memset(CRN.nu_minus,0,(CRN.N)*(CRN.M)*sizeof(SSAL_real_t));
     memset(CRN.nu_plus,0,(CRN.N)*(CRN.M)*sizeof(SSAL_real_t));
     /*read species names*/
@@ -540,6 +601,12 @@ SSAL_ImportLSBML(const char * filename )
         }
 
     }
+
+    for (int i=0;i<CRN.N*CRN.M;i++)
+    {
+        CRN.nu[i] = CRN.nu_plus[i] - CRN.nu_minus[i];
+    }
+
     cJSON_Delete(root);
     return CRN;
 }
@@ -562,7 +629,8 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
     int i,j,k;
     char cur_char;
     char prev_char;
-
+    char * funcname;
+    funcname = "SSAL_UtilTokeniseArgs";
     cur_char = args[0];
     prev_char = ' ';
     numChars = 0;
@@ -573,7 +641,7 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
         *argc = 0;
         return NULL;
     }
-    /*first pass to get sizes... a bit insecure as buffer overruns can occur*/
+    /*first pass to get sizes. */
     while (cur_char != '\0' && i != SSAL_MAX_BUFFER_SIZE)
     {
         numChars += (cur_char != ' ');
@@ -585,8 +653,14 @@ char** SSAL_UtilTokeniseArgs(int *argc,const char * args)
 
 
     argsLength = i; 
-    buf = (char *)malloc((numChars+numArgs)*sizeof(char));
-    argv = (char **)malloc(numArgs*sizeof(char*));
+    if((buf = (char *)malloc((numChars+numArgs)*sizeof(char)))==NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
+    if ((argv = (char **)malloc(numArgs*sizeof(char*))) == NULL)
+    {
+        SSAL_HandleError(SSAL_MEMORY_ERROR,funcname,__LINE__,1,0,NULL);
+    }
     j = 0;
     k = 0;
     /*second pass to collect tokenised data*/

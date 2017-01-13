@@ -60,10 +60,16 @@ struct SSAL_ChemicalReactionNetwork_struct
     SSAL_real_t *nu_minus;
     /** stochiometric coefficient matrix of the products */
     SSAL_real_t *nu_plus;
+    /** stochiometric matrix nu =  (nu^+ -nu^-) */
+    SSAL_real_t *nu;
     /** kinetic rate constants*/
     SSAL_real_t *c;
     /**default initial condition*/
     SSAL_real_t *X0;
+    /** number of variables to track */
+    int nvar;
+    /** designates which variables to track */
+    int *vars;
 };
 
 /** type name for  SSAL_ChemicalReactionNetwork_struct*/
