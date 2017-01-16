@@ -76,7 +76,8 @@ dactauls(int m, int n, int nt, double * restrict T, double * restrict X0,
     {
         Z_f[i] = X0[i];
     }
-
+    
+    k=0;
     
     /*compute coarse propensities*/
     duhzds(m,n,nu_minus,c,Z_c,a_c);

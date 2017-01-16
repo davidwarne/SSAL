@@ -51,8 +51,8 @@ daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
     double Z[n]; /*approximate and exact states*/
     double X[n];
     double Ztilde[n]; /*stored approximate state of last step*/
-    double a_Z[n]; /*exact and approximate propensities*/
-    double a_X[n];
+    double a_Z[m]; /*exact and approximate propensities*/
+    double a_X[m];
     /*virtual propensity channels*/
     double b[3][m];
     /*P ~ Exp(1) */
@@ -60,9 +60,22 @@ daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
     double T_r[3][m];
     double deltat[3][m];
     int mu[2];
-
     int i,j,k,r,ti;
     double t, delta, T_tau;
+    
+//    Z = (double*)malloc(n*sizeof(double));
+//    X = (double*)malloc(n*sizeof(double));
+//    Ztilde = (double*)malloc(n*sizeof(double));
+//    a_Z = (double*)malloc(m*sizeof(double));
+//    a_X = (double*)malloc(m*sizeof(double));
+//    for (r=0;r<3;r++)
+//    {
+//        b[r] = (double*)malloc(m*sizeof(double));
+//        P[r] = (double*)malloc(m*sizeof(double));
+//        T_r[r] = (double*)malloc(m*sizeof(double));
+//        deltat[r] = (double*)malloc(m*sizeof(double));
+//    }
+
 
     /*initialise*/
     for (i=0;i<n;i++)
@@ -108,18 +121,18 @@ daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
      }
      for (j=0;j<m;j++)
      {
-         b[1][j] = a_X[j] - b[0][j];
+         b[1][j] = 0;
      }
      for (j=0;j<m;j++)
      {
-         b[2][j] = a_Z[j] - b[0][j];
+         b[2][j] = 0;
      }
      /*update deltas*/
      for (r=0;r<3;r++)
      {
          for (j=0;j<m;j++)
          {
-             deltat[r][j] = (b[r][j] > 0) 
+             deltat[r][j] = (b[r][j] != 0) 
                             ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
          }
      }
@@ -144,7 +157,7 @@ daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
     {
         while((t+delta) <= T[ti])
         {
-            if (t + delta >= T_tau)
+            if ((t + delta) >= T_tau)
             {
                 /*store current state for propensity update*/
                 for (i=0;i<n;i++)
@@ -207,7 +220,7 @@ daectauls(int m, int n, int nt, double *restrict T, double * restrict X0,
             {
                 for (j=0;j<m;j++)
                 {
-                    deltat[r][j] = (b[r][j] > 0) 
+                    deltat[r][j] = (b[r][j] != 0) 
                                    ? (P[r][j] - T_r[r][j])/b[r][j] : INFINITY;
                 }
             }
