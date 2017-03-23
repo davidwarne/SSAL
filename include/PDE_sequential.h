@@ -14,32 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * @file SSAL_internal.h
- * @brief Computational backend for SSAL
- *
- * @author David J. Warne (david.warne@qut.edu.au)
- * @author School of Mathematical Sciences
- * @author Science and Engineering Faculty
- * @author Queensland University of Technology
- *
- */
 
-#ifndef __SSAL_INTERNAL_H_
-#define __SSAL_INTERNAL_H_
-
-#ifdef __SERIAL__
-#include "ESSA_sequential.h"
-#include "util_sequential.h"
-#include "ASSA_sequential.h"
-#include "ODE_sequential.h"
-#include "PDE_sequential.h"
-#endif /* __SERIAL__ */
-
-#ifdef __PARALLEL__
-#include "ESSA_parallel.h"
-#include "ASSA_parallal.h"
-#include "util_parallel.h"
-#endif /*__PARALLEL__*/
-
-#endif /* __SSAL_INTERNAL_H_ */
+#ifndef __PDE_SEQUENTIAL_H_
+#define __PDE_SEQUENTIAL_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+/* BTCS method for 1-d parabolic PDE with non-linear diffusion and sources*/
+int
+dbtcsfps(double, double, int, double* restrict, double * restrict, 
+         double * restrict, void (*)(double *, int , double*, double *), 
+         void (*)(double *, int, double *, double *), int, int, double, int, 
+         double * restrict);
+#endif /*__PDE_SEQUENTIAL_H_*/

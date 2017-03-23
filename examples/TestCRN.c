@@ -118,7 +118,7 @@ main(int argc , char ** argv)
     X0 = CRN.X0;
     names = CRN.names;
     n = CRN.N;
-    for(i=0;i<CRN.N;i++)
+    for(i=0;i<CRN.nvar;i++)
         fprintf(stderr,"%s\n",names[i]);
 
     X_r = (SSAL_real_t *)malloc(CRN.N*NT*NR*sizeof(SSAL_real_t));

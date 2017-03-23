@@ -370,10 +370,10 @@ SSAL_WriteChemicalReactionNetwork(FILE * stream ,
     fprintf(stream,"{\"id\" : \"space\",\"spatialDimensions\" : 0, \"size\" : 0}");
     fprintf(stream,"],");
     fprintf(stream,"\"species\" : [");
-        fprintf(stream,"{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[0],0);
+        fprintf(stream,"{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[0],(int)data.X0[0]);
     for (i=1;i<data.N;i++)
     {
-        fprintf(stream,",{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[i],0);
+        fprintf(stream,",{\"id\" : \"%s\", \"compartment\" : \"space\",\"initialAmount\" : %d, \"hasOnlySubstanceUnits\" : true}",data.names[i],(int)data.X0[i]);
     }
     fprintf(stream,"],");
     fprintf(stream,"\"parameters\" : [");
