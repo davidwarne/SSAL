@@ -80,11 +80,10 @@ dbtcsfps(double L, double T, int nt, double* restrict Ti, double * restrict p,
     u_test = 1.0;
     (*D)(&u_test,1,p,&D_bar);
     /*check stability condition*/
-    fprintf(stderr,"D = %f  dt = %f dx = %f",D_bar,dt,dx);
-    if (dt*D_bar > dx*dx )
-    {
-        fprintf(stderr,"Warning: dt*D > dx*dx, so solution may not be stable. Either decrease dt or increase dx\n.");
-    }
+//    if (dt*D_bar > dx*dx )
+//    {
+//        fprintf(stderr,"Warning: dt*D > dx*dx, so solution may not be stable. Either decrease dt or increase dx\n.");
+//    }
     /*allocate memory for current and previous times steps*/
     up = (double*)malloc(Nx*sizeof(double));    
     u_buf = (double*)malloc(2*Nx*sizeof(double));    
@@ -142,7 +141,7 @@ dbtcsfps(double L, double T, int nt, double* restrict Ti, double * restrict p,
                 {
                     un[i] += dt*fu[i] + up[i];
                 }
-                /*compute residual in using l_2 norm for convergence check*/
+                /*compute residual in l_2 norm for convergence check*/
                 res = 0;
                 for (int i=0;i<Nx;i++)
                 {
@@ -156,6 +155,10 @@ dbtcsfps(double L, double T, int nt, double* restrict Ti, double * restrict p,
             if (res > tol)
             {
                 fprintf(stderr,"Error: Failed to converge.\n");
+                free(Du);
+                free(fu);
+                free(up);
+                free(u_buf);
                 return -1;
             }
         }
