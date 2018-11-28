@@ -76,14 +76,7 @@ dbtcsfps(double L, double T, int nt, double* restrict Ti, double * restrict p,
     /*generate mesh spacings*/
     dx = L/((double)(Nx - 1));
     dt = T/((double)(Nt - 1));
-    /*@todo for now we assume max(D(u)) occurs at D(1)*/
-    u_test = 1.0;
-    (*D)(&u_test,1,p,&D_bar);
-    /*check stability condition*/
-//    if (dt*D_bar > dx*dx )
-//    {
-//        fprintf(stderr,"Warning: dt*D > dx*dx, so solution may not be stable. Either decrease dt or increase dx\n.");
-//    }
+    /** @todo should add a stability check here */ 
     /*allocate memory for current and previous times steps*/
     up = (double*)malloc(Nx*sizeof(double));    
     u_buf = (double*)malloc(2*Nx*sizeof(double));    
@@ -154,7 +147,7 @@ dbtcsfps(double L, double T, int nt, double* restrict Ti, double * restrict p,
             /*failed to converge*/
             if (res > tol)
             {
-                fprintf(stderr,"Error: Failed to converge.\n");
+                fprintf(stderr,"Error: Failed to converge [res > %g after %d iters].\n",tol,iter);
                 free(Du);
                 free(fu);
                 free(up);
