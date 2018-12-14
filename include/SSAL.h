@@ -111,24 +111,24 @@ typedef struct SSAL_StochasticDifferentialEquation_struct SSAL_SDE;
 
 
 /*converts variable name list to indexes*/
-#define SSAL_VARS2INDS(sim,model,varInd) {                  \
+#define SSAL_VARS2INDS(Nvar,var,model,varInd) {             \
     int i,j;                                                \
-    if ((sim)->Nvar == (model)->N)                          \
+    if (Nvar == (model)->N)                                 \
     {                                                       \
         for (j=0;j<(model)->N;j++)                          \
         {                                                   \
             varInd[j] = j;                                  \
         }                                                   \
-        for (i=0;i<(sim)->Nvar;i++)                         \
-        {                                                                \
-            strncpy((sim)->var[i],(model)->names[i],SSAL_MAX_NAME_SIZE); \
-        }                                                                \
+        for (i=0;i<Nvar;i++)                                \
+        {                                                         \
+            strncpy(var[i],(model)->names[i],SSAL_MAX_NAME_SIZE); \
+        }                                                         \
     }                                                       \
-    for (i=0;i<(sim)->Nvar;i++)                             \
+    for (i=0;i<Nvar;i++)                                    \
     {                                                       \
         for (j=0;j<(model)->N;j++)                          \
         {                                                   \
-            if (!strcmp((sim)->var[i],(model)->names[j]))   \
+            if (!strcmp(var[i],(model)->names[j]))          \
             {                                               \
                 varInd[i] = j;                              \
             }                                               \

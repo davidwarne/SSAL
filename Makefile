@@ -19,7 +19,7 @@ ASSADIR=$(SRCDIR)/sequential/assa
 ODEDIR=$(SRCDIR)/sequential/ode
 PDEDIR=$(SRCDIR)/sequential/pde
 
-EXESRC = $(EXPDIR)/TestCRN.c $(EXPDIR)/TestCRN_cor.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c $(EXPDIR)/TestPDE.c $(EXPDIR)/TestPDE_FKPP.c $(EXPDIR)/TestPDE_PF.c
+EXESRC = $(EXPDIR)/TestCRN.c $(EXPDIR)/TestCRN_cor.c $(EXPDIR)/TestSDE.c $(EXPDIR)/TestImportLSBML.c $(EXPDIR)/TestRNG.c $(EXPDIR)/TestODE.c $(EXPDIR)/TestPDE.c $(EXPDIR)/TestPDE_FKPP.c $(EXPDIR)/TestPDE_PF.c $(EXPDIR)/TestPhaseTypeDist.c
 
 SRC = $(IODIR)/cJSON.c $(SRCDIR)/SSAL.c $(UTILDIR)/suarngs.c $(ESSADIR)/degils.c $(ESSADIR)/demnrms.c $(ASSADIR)/datauls.c $(ASSADIR)/dactauls.c $(ASSADIR)/daectauls.c $(ASSADIR)/daems.c $(ASSADIR)/dacems.c $(UTILDIR)/duhzds.c $(UTILDIR)/durngus.c $(UTILDIR)/durngexps.c $(UTILDIR)/durngpmfs.c $(UTILDIR)/durngpois.c $(UTILDIR)/durngns.c $(UTILDIR)/durngmvns.c $(ODEDIR)/drk4s.c $(PDEDIR)/dbtcsfps.c
 OBJS = $(SRC:.c=.o)
