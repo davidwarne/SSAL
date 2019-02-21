@@ -54,4 +54,11 @@ dacems(int,  int, int , double * restrict ,double * restrict, double * restrict,
        void (*)(double*, unsigned int, double*, unsigned int, double, double*), 
        void (*)(double*, unsigned int, double *, unsigned int, double, double*), 
        int , int * restrict , double , int , double * , double * );
+
+/* discrete-time lattice-based random walk with proliferation*/
+int
+dalrws(int, int *, void (*)(int, int *, int, int *,int *), int, int, 
+       double * restrict, double * restrict, double * restrict, 
+       double (*)(double, double *), double (*)(double, double*), 
+       int, int * restrict, double, double *);
 #endif /* __ASSA_SEQUENTIAL_H_ */
